@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/Users/Naghmeh.Dezhabad@MLSE.com/.config/gh\")",
+      "Bash(gh auth:*)"
+    ]
+  }
+}

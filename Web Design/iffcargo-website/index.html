@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IFF — Your Complete Shipping Solution Since 1993</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy: #1b3a5c;
+  --navy-dark: #112540;
+  --navy-light: #2a5080;
+  --sky: #e8f4fd;
+  --accent: #f0a500;
+  --accent-dark: #d4920a;
+  --white: #ffffff;
+  --off-white: #f8f9fc;
+  --text: #1a2332;
+  --text2: #4a5568;
+  --text3: #8896a8;
+  --border: #e2e8f0;
+  --display: 'Outfit', sans-serif;
+  --body: 'DM Sans', sans-serif;
+  --shadow: 0 4px 20px rgba(27,58,92,.08);
+  --shadow-lg: 0 12px 48px rgba(27,58,92,.15);
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);color:var(--text);background:var(--white);overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:all .3s}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 32px;height:70px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo img{height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-family:var(--display);font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--navy)}
+.nav-cta{display:flex;gap:10px;align-items:center}
+.btn-outline{padding:9px 20px;border:2px solid var(--navy);border-radius:8px;font-family:var(--display);font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;transition:all .2s}
+.btn-outline:hover{background:var(--navy);color:var(--white)}
+.btn-primary{padding:9px 20px;background:var(--accent);border:2px solid var(--accent);border-radius:8px;font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);text-decoration:none;transition:all .2s}
+.btn-primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 50%,var(--navy-light) 100%);display:flex;align-items:center;position:relative;overflow:hidden;padding-top:70px}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-globe{position:absolute;right:-120px;top:50%;transform:translateY(-50%);width:700px;height:700px;opacity:.08}
+.hero-globe svg{width:100%;height:100%}
+.hero-inner{max-width:1200px;margin:0 auto;padding:80px 32px;display:grid;grid-template-columns:1fr 480px;gap:60px;align-items:center;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(240,165,0,.15);border:1px solid rgba(240,165,0,.3);border-radius:20px;padding:6px 14px;font-family:var(--display);font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.04em;margin-bottom:24px}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%}
+h1{font-family:var(--display);font-size:clamp(42px,5vw,68px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:24px}
+h1 span{color:var(--accent)}
+.hero-sub{font-size:18px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:40px;font-weight:300;max-width:520px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.btn-hero-primary{padding:16px 32px;background:var(--accent);border-radius:10px;font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-primary:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,165,0,.4)}
+.btn-hero-outline{padding:16px 32px;border:2px solid rgba(255,255,255,.3);border-radius:10px;font-family:var(--display);font-size:15px;font-weight:600;color:var(--white);text-decoration:none;transition:all .2s}
+.btn-hero-outline:hover{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.08)}
+.hero-stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid rgba(255,255,255,.1)}
+.stat-item{text-align:left}
+.stat-num{font-family:var(--display);font-size:36px;font-weight:800;color:var(--white);line-height:1}
+.stat-label{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;font-weight:300}
+
+/* Hero quote card */
+.hero-card{background:var(--white);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-lg)}
+.hero-card-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.hero-card-sub{font-size:13px;color:var(--text3);margin-bottom:24px}
+.quick-type-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:20px}
+.qt-tab{padding:10px 6px;border:1.5px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-family:var(--display);font-size:12px;font-weight:600;color:var(--text2);transition:all .15s;background:var(--off-white)}
+.qt-tab.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.quick-field{margin-bottom:12px}
+.quick-field label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;font-family:var(--display)}
+.quick-field input,.quick-field select{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:14px;color:var(--text);background:var(--white);appearance:none;transition:border-color .15s}
+.quick-field input:focus,.quick-field select:focus{outline:none;border-color:var(--navy)}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-get-quote{width:100%;height:48px;background:var(--navy);border:none;border-radius:10px;font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-get-quote:hover{background:var(--navy-dark);transform:translateY(-1px)}
+.card-note{text-align:center;font-size:11px;color:var(--text3);margin-top:10px}
+
+/* ── SECTION BASE ── */
+section{padding:96px 0}
+.container{max-width:1200px;margin:0 auto;padding:0 32px}
+.section-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);background:var(--sky);padding:6px 14px;border-radius:20px;margin-bottom:16px}
+.section-title{font-family:var(--display);font-size:clamp(32px,4vw,48px);font-weight:800;color:var(--navy);line-height:1.1;letter-spacing:-.02em;margin-bottom:16px}
+.section-sub{font-size:17px;color:var(--text2);line-height:1.7;max-width:580px;font-weight:300}
+
+/* ── SERVICES ── */
+.services{background:var(--off-white)}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px}
+.service-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;transition:all .25s;position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--accent));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.service-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:transparent}
+.service-card:hover::before{transform:scaleX(1)}
+.service-icon{width:52px;height:52px;background:var(--sky);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.service-icon svg{color:var(--navy)}
+.service-card h3{font-family:var(--display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.service-card p{font-size:14px;color:var(--text2);line-height:1.7}
+.service-tag{display:inline-block;margin-top:16px;padding:4px 10px;background:var(--sky);border-radius:20px;font-size:11px;font-weight:600;color:var(--navy);font-family:var(--display)}
+.service-tag.instant{background:#edfaf4;color:#057a55}
+
+/* ── WHY IFF ── */
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:20px}
+.why-image{position:relative}
+.why-image-box{background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--radius-lg);height:480px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.why-image-box::after{content:'Since 1993';position:absolute;bottom:32px;left:32px;font-family:var(--display);font-size:13px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.04em}
+.why-globe-icon{opacity:.15}
+.why-stat-card{position:absolute;bottom:-20px;right:-20px;background:var(--white);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.why-stat-card .num{font-family:var(--display);font-size:32px;font-weight:800;color:var(--navy)}
+.why-stat-card .lbl{font-size:12px;color:var(--text3);margin-top:2px}
+.why-points{display:flex;flex-direction:column;gap:28px}
+.why-point{display:flex;gap:18px;align-items:flex-start}
+.why-point-num{width:36px;height:36px;border-radius:10px;background:var(--navy);color:var(--white);font-family:var(--display);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.why-point h4{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.why-point p{font-size:14px;color:var(--text2);line-height:1.6}
+
+/* ── PORTAL PROMO ── */
+.portal{background:linear-gradient(135deg,var(--navy-dark),var(--navy));position:relative;overflow:hidden}
+.portal::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.portal-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+.portal .section-tag{background:rgba(240,165,0,.15);color:var(--accent);border:1px solid rgba(240,165,0,.2)}
+.portal .section-title{color:var(--white)}
+.portal .section-sub{color:rgba(255,255,255,.65)}
+.portal-features{display:flex;flex-direction:column;gap:16px;margin-top:32px}
+.portal-feature{display:flex;align-items:center;gap:12px;font-size:15px;color:rgba(255,255,255,.8)}
+.portal-feature::before{content:'✓';width:24px;height:24px;background:rgba(240,165,0,.2);border:1px solid rgba(240,165,0,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;text-align:center;line-height:24px}
+.portal-mockup{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-lg);padding:24px;backdrop-filter:blur(10px)}
+.pm-header{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.pm-dot{width:10px;height:10px;border-radius:50%}
+.pm-title{font-family:var(--display);font-size:13px;font-weight:600;color:rgba(255,255,255,.6);margin-left:4px}
+.pm-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.pm-carrier{font-family:var(--display);font-size:13px;font-weight:600;color:var(--white)}
+.pm-service{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.pm-rate{font-family:'Outfit',monospace;font-size:16px;font-weight:700;color:var(--accent)}
+.pm-best{font-size:10px;background:rgba(240,165,0,.2);color:var(--accent);padding:2px 8px;border-radius:10px;font-weight:600;font-family:var(--display)}
+.pm-cta{width:100%;margin-top:16px;padding:12px;background:var(--accent);border:none;border-radius:8px;font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);cursor:pointer}
+
+/* ── SPOT RATE ── */
+.spot{background:var(--sky)}
+.spot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.spot-card{background:var(--white);border-radius:var(--radius-lg);padding:28px;border:1px solid var(--border);text-align:center}
+.spot-icon{width:56px;height:56px;background:var(--navy);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--white)}
+.spot-card h3{font-family:var(--display);font-size:17px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.spot-card p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+.btn-spot{display:inline-block;padding:10px 20px;border:2px solid var(--navy);border-radius:8px;font-family:var(--display);font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;transition:all .2s}
+.btn-spot:hover{background:var(--navy);color:var(--white)}
+
+/* ── CONTACT ── */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:48px}
+.contact-info{display:flex;flex-direction:column;gap:24px}
+.contact-item{display:flex;gap:16px;align-items:flex-start}
+.contact-icon{width:44px;height:44px;background:var(--sky);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--navy)}
+.contact-item h4{font-family:var(--display);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.contact-item p,.contact-item a{font-size:14px;color:var(--text2);text-decoration:none;line-height:1.6}
+.contact-item a:hover{color:var(--navy)}
+.contact-form{background:var(--off-white);border-radius:var(--radius-lg);padding:32px;border:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-field{margin-bottom:14px}
+.form-field label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;font-family:var(--display)}
+.form-field input,.form-field select,.form-field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:14px;color:var(--text);background:var(--white);transition:border-color .15s;resize:none}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--navy)}
+.btn-submit{width:100%;height:48px;background:var(--navy);border:none;border-radius:10px;font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);cursor:pointer;transition:all .2s}
+.btn-submit:hover{background:var(--navy-dark)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy-dark);color:var(--white);padding:64px 0 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand img{height:36px;margin-bottom:16px;filter:brightness(0) invert(1)}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;max-width:280px}
+.footer-col h4{font-family:var(--display);font-size:13px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.footer-col a{display:block;font-size:13px;color:rgba(255,255,255,.55);text-decoration:none;margin-bottom:10px;transition:color .2s}
+.footer-col a:hover{color:var(--white)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:28px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(255,255,255,.3)}
+
+/* ── ANIMATIONS ── */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr}
+  .hero-card{display:none}
+  .services-grid{grid-template-columns:1fr 1fr}
+  .why-grid,.portal-inner,.contact-grid,.footer-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .spot-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div style="display:flex;align-items:center;gap:20px">
+      <a class="nav-logo" href="index.html"><img src="logo.svg" alt="IFF" style="height:44px;width:auto"/></a>
+      <div style="border-left:1px solid var(--border);padding-left:20px;font-family:var(--display);font-size:12px;font-weight:500;color:var(--text3);letter-spacing:.01em;line-height:1.35">International<br/>Freight Forwarders</div>
+    </div>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#why">About</a>
+      <a href="#portal">Ship Online</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-cta">
+      <a href="login.html" class="btn-outline">Sign in</a>
+      <a href="register.html" class="btn-primary">Get a quote</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-globe">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="white" stroke-width=".5">
+      <circle cx="100" cy="100" r="90"/>
+      <ellipse cx="100" cy="100" rx="45" ry="90"/>
+      <ellipse cx="100" cy="100" rx="90" ry="35"/>
+      <line x1="10" y1="100" x2="190" y2="100"/>
+      <line x1="100" y1="10" x2="100" y2="190"/>
+      <ellipse cx="100" cy="100" rx="70" ry="90"/>
+      <ellipse cx="100" cy="100" rx="90" ry="65"/>
+    </svg>
+  </div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge">Trusted Since 1993 · Over 30 Years of Experience</div>
+      <h1>Every Shipment.<br/>Every <span>Destination.</span><br/>Every Time.</h1>
+      <p class="hero-sub">From a single envelope to full truckloads, IFF delivers end-to-end freight solutions across Canada, the US, and worldwide — with real-time rates and instant booking online.</p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn-hero-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Sign up to get instant quotes
+        </a>
+        <a href="#services" class="btn-hero-outline">Our services</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-num">30+</div><div class="stat-label">Years in business</div></div>
+        <div class="stat-item"><div class="stat-num">5+</div><div class="stat-label">Carrier partners</div></div>
+        <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Online booking</div></div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-title">Get an instant quote</div>
+      <div class="hero-card-sub">Compare rates across all carriers in seconds</div>
+      <div class="quick-type-tabs">
+        <div class="qt-tab active">Envelope</div>
+        <div class="qt-tab">Parcel</div>
+        <div class="qt-tab">Freight</div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-field"><label>From</label><input placeholder="City or postal code"/></div>
+        <div class="quick-field"><label>To</label><input placeholder="City or postal code"/></div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-field"><label>Weight (lbs)</label><input type="number" placeholder="1.0"/></div>
+        <div class="quick-field"><label>Pickup date</label><input type="date" id="heroDate"/></div>
+      </div>
+      <button class="btn-get-quote" onclick="window.location.href='register.html'">Sign up to compare rates →</button>
+      <div class="card-note">Free account · No credit card required to quote</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="section-tag">What we offer</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end">
+      <div>
+        <h2 class="section-title">Complete shipping solutions for every need</h2>
+      </div>
+      <p class="section-sub" style="margin:0">Whether you need to send a document across town or a full container across the ocean, IFF has the solution — and the experience to back it up.</p>
+    </div>
+    <div class="services-grid fade-up">
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m2 6 10 8 10-8"/></svg></div>
+        <h3>Courier & Small Packages</h3>
+        <p>Door-to-door courier service for envelopes, documents, and small packages across Canada and the US. Same-day, next-day, and economy options available.</p>
+        <span class="service-tag instant">⚡ Instant quotes available</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <h3>LTL &amp; FTL Trucking</h3>
+        <p>Less-than-truckload and full truckload freight across Canada and the US. Competitive rates from our network of top-tier carriers including FedEx Freight, XPO, Day & Ross, Manitoulin, and Polaris.</p>
+        <span class="service-tag instant">⚡ Instant quotes available</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+        <h3>Air Freight</h3>
+        <p>Import and export air freight solutions for time-sensitive cargo. We work with leading airlines to ensure your shipment arrives on time, every time.</p>
+        <span class="service-tag">Request spot rate</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-8 4 4 4-6 4 10"/><path d="M3 21h18"/></svg></div>
+        <h3>Ocean Freight</h3>
+        <p>LCL and FCL ocean freight between Canada and the US. Whether you need a full container or just a portion, we have cost-effective solutions for your cargo.</p>
+        <span class="service-tag">Request spot rate</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Customs Clearance</h3>
+        <p>Expert customs brokerage for import and export shipments. We handle all documentation, duties, and compliance so your cargo clears without delays.</p>
+        <span class="service-tag">Request spot rate</span>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Cargo Insurance &amp; Drayage</h3>
+        <p>Protect your shipments with comprehensive cargo insurance. Plus drayage services for port and rail container pickup and delivery.</p>
+        <span class="service-tag">Request spot rate</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY IFF -->
+<section id="why">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-image fade-up">
+        <div class="why-image-box">
+          <svg class="why-globe-icon" width="340" height="340" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="white" stroke-width=".6">
+            <circle cx="100" cy="100" r="90"/>
+            <ellipse cx="100" cy="100" rx="45" ry="90"/>
+            <ellipse cx="100" cy="100" rx="90" ry="35"/>
+            <line x1="10" y1="100" x2="190" y2="100"/>
+            <ellipse cx="100" cy="100" rx="70" ry="90"/>
+            <ellipse cx="100" cy="100" rx="90" ry="65"/>
+          </svg>
+        </div>
+        <div class="why-stat-card">
+          <div class="num">30+</div>
+          <div class="lbl">Years moving cargo worldwide</div>
+        </div>
+      </div>
+      <div class="fade-up">
+        <div class="section-tag">Why IFF</div>
+        <h2 class="section-title">Built on three decades of trust</h2>
+        <p class="section-sub" style="margin-bottom:40px">Since 1993, IFF has been the freight partner businesses rely on when it matters most. We combine experience with modern technology to make shipping simpler.</p>
+        <div class="why-points">
+          <div class="why-point">
+            <div class="why-point-num">1</div>
+            <div>
+              <h4>Real-time rates from top carriers</h4>
+              <p>Compare live rates from FedEx, XPO, Day & Ross, Manitoulin, Polaris and more — all in one place, instantly.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-num">2</div>
+            <div>
+              <h4>Book, pay, and print labels online</h4>
+              <p>Our customer portal lets you manage your entire shipping workflow without picking up the phone.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-num">3</div>
+            <div>
+              <h4>Expert team behind every shipment</h4>
+              <p>Our experienced team is available Monday to Friday to handle complex shipments, customs, and anything that needs a human touch.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-point-num">4</div>
+            <div>
+              <h4>All cargo types, all destinations</h4>
+              <p>From a single envelope to ocean containers — domestic, cross-border, and international — IFF handles it all.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTAL PROMO -->
+<section class="portal" id="portal">
+  <div class="container">
+    <div class="portal-inner">
+      <div class="fade-up">
+        <div class="section-tag">New: Ship Online</div>
+        <h2 class="section-title">Your shipments. Your rates. Your control.</h2>
+        <p class="section-sub">Create a free IFF account and instantly compare rates across our carrier network. Book, pay, and print your label — you're in full control of the entire process, from quote to delivery.</p>
+        <div class="portal-features">
+          <div class="portal-feature">Compare rates from 50+ carriers in seconds</div>
+          <div class="portal-feature">Book and pay securely online</div>
+          <div class="portal-feature">Print shipping labels and bills of lading instantly</div>
+          <div class="portal-feature">Track all your shipments in one dashboard</div>
+          <div class="portal-feature">Volume discounts for frequent shippers</div>
+        </div>
+        <a href="register.html" class="btn-hero-primary" style="display:inline-flex;margin-top:36px">Sign up for free →</a>
+      </div>
+      <div class="portal-mockup fade-up">
+        <div class="pm-header">
+          <div class="pm-dot" style="background:#ff5f57"></div>
+          <div class="pm-dot" style="background:#febc2e;margin-left:6px"></div>
+          <div class="pm-dot" style="background:#28c840;margin-left:6px"></div>
+          <div class="pm-title" style="margin-left:12px">IFF Portal — Rate Results</div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);font-family:'Outfit',sans-serif;margin-bottom:14px">Toronto, ON → Chicago, IL · 500 lbs · LTL Freight</div>
+        <div class="pm-row">
+          <div><div class="pm-carrier">FedEx Freight <span class="pm-best">Best rate</span></div><div class="pm-service">Freight Economy · Est. Thu May 29</div></div>
+          <div class="pm-rate">C$312.40</div>
+        </div>
+        <div class="pm-row">
+          <div><div class="pm-carrier">Day & Ross</div><div class="pm-service">Standard LTL · Est. Fri May 30</div></div>
+          <div class="pm-rate">C$341.80</div>
+        </div>
+        <div class="pm-row">
+          <div><div class="pm-carrier">Manitoulin</div><div class="pm-service">Freight Economy · Est. Mon Jun 2</div></div>
+          <div class="pm-rate">C$368.25</div>
+        </div>
+        <div class="pm-row" style="border:none">
+          <div><div class="pm-carrier">XPO Logistics</div><div class="pm-service">Standard LTL · Est. Mon Jun 2</div></div>
+          <div class="pm-rate">C$394.10</div>
+        </div>
+        <button class="pm-cta">Book best rate — C$312.40 →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPOT RATES -->
+<section class="spot" id="spot">
+  <div class="container">
+    <div style="text-align:center;max-width:600px;margin:0 auto">
+      <div class="section-tag">Need a custom quote?</div>
+      <h2 class="section-title">Request a spot rate</h2>
+      <p class="section-sub" style="margin:0 auto">For air freight, ocean, oversized cargo, or anything that needs a personal touch — our team will get back to you with a competitive quote, fast.</p>
+    </div>
+    <div class="spot-grid fade-up" style="margin-top:48px">
+      <div class="spot-card">
+        <div class="spot-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+        <h3>Air Freight</h3>
+        <p>Import &amp; export air freight. Time-sensitive cargo handled with care. International and domestic routes.</p>
+        <a href="#contact" class="btn-spot">Request rate</a>
+      </div>
+      <div class="spot-card">
+        <div class="spot-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-8 4 4 4-6 4 10"/><path d="M3 21h18"/></svg></div>
+        <h3>Ocean Freight</h3>
+        <p>LCL and FCL ocean freight. Canada/US import and export. Cost-effective container solutions.</p>
+        <a href="#contact" class="btn-spot">Request rate</a>
+      </div>
+      <div class="spot-card">
+        <div class="spot-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Customs &amp; Special Cargo</h3>
+        <p>Customs clearance, dangerous goods, oversized freight, insurance, and drayage services.</p>
+        <a href="#contact" class="btn-spot">Request rate</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="section-tag">Get in touch</div>
+    <h2 class="section-title">We're here to help</h2>
+    <div class="contact-grid fade-up">
+      <div class="contact-info">
+        <div class="contact-item">
+          <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div>
+            <h4>Address</h4>
+            <a href="https://maps.google.com/?q=286+Attwell+Drive+Unit+16+Toronto+ON+M9W+5B2" target="_blank" rel="noopener" style="color:var(--text2)">286 Attwell Drive, Unit 16<br/>Toronto, ON M9W 5B2<br/>Canada</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.42a2 2 0 0 1 1.9-2.18h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.13 6.13l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7a2 2 0 0 1 1.77 2.05z"/></svg></div>
+          <div>
+            <h4>Phone</h4>
+            <a href="tel:4167984151">416 798 4151</a><br/>
+            <a href="tel:18777984151">1 877 798 4151 (Toll Free)</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div>
+            <h4>Email</h4>
+            <a href="mailto:info@iffcargo.com">info@iffcargo.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div>
+            <h4>Hours</h4>
+            <p>Monday – Friday: 9:00 AM – 5:00 PM</p>
+          </div>
+        </div>
+        <div style="background:var(--sky);border-radius:var(--radius);padding:20px;border:1px solid var(--border)">
+          <p style="font-size:13px;color:var(--text2);line-height:1.7"><strong style="color:var(--navy)">Need a quote right now?</strong><br/>Create a free account to instantly compare rates from all our carriers and book your shipment online — available 24/7.</p>
+          <a href="register.html" class="btn-outline" style="display:inline-block;margin-top:12px;font-size:13px">Get instant quotes →</a>
+        </div>
+      </div>
+      <div class="contact-form">
+        <h3 style="font-family:var(--display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px">Send us a message</h3>
+        <div class="form-row">
+          <div class="form-field"><label>First name</label><input placeholder="John"/></div>
+          <div class="form-field"><label>Last name</label><input placeholder="Smith"/></div>
+        </div>
+        <div class="form-field"><label>Email</label><input type="email" placeholder="john@company.com"/></div>
+        <div class="form-field"><label>Phone</label><input type="tel" placeholder="416 555 0100"/></div>
+        <div class="form-field"><label>Service needed</label>
+          <select>
+            <option>Select a service…</option>
+            <option>Courier / Small Package</option>
+            <option>LTL Freight</option>
+            <option>FTL Trucking</option>
+            <option>Air Freight</option>
+            <option>Ocean Freight (LCL)</option>
+            <option>Ocean Freight (FCL)</option>
+            <option>Customs Clearance</option>
+            <option>Cargo Insurance</option>
+            <option>Drayage</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Message</label><textarea rows="4" placeholder="Tell us about your shipment or ask us anything…"></textarea></div>
+        <button class="btn-submit">Send message</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="logo-white.svg" alt="IFF" style="height:42px;width:auto;margin-bottom:16px;display:block"/>
+        <p>Your complete freight solution since 1993. Courier, trucking, air, ocean, customs clearance — we move it all.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="#services">Courier & Packages</a>
+        <a href="#services">LTL Freight</a>
+        <a href="#services">FTL Trucking</a>
+        <a href="#services">Air Freight</a>
+        <a href="#services">Ocean Freight</a>
+        <a href="#services">Customs Clearance</a>
+      </div>
+      <div class="footer-col">
+        <h4>Portal</h4>
+        <a href="register.html">Create account</a>
+        <a href="login.html">Sign in</a>
+        <a href="#">Track shipment</a>
+        <a href="#">Get a quote</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="tel:4167984151">416 798 4151</a>
+        <a href="tel:18777984151">1 877 798 4151</a>
+        <a href="mailto:info@iffcargo.com">info@iffcargo.com</a>
+        <a href="#">Mon–Fri, 9am–5pm</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 IFF. All rights reserved.</span>
+      <span>Privacy Policy · Terms of Use</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Set today's date on hero
+document.getElementById('heroDate').value = new Date().toISOString().split('T')[0];
+
+// Quick type tabs
+document.querySelectorAll('.qt-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.qt-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// Scroll animations
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Nav scroll effect
+window.addEventListener('scroll', () => {
+  document.querySelector('nav').style.boxShadow = window.scrollY > 20 ? '0 2px 20px rgba(27,58,92,.12)' : 'none';
+});
+</script>
+</body>
+</html>

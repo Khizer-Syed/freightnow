@@ -1,0 +1,45 @@
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow);
+}
+
+.title {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.right {
+  display: flex;
+  gap: 10px;
+}
+
+.btnNewQuote {
+  padding: 9px 18px;
+  background: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s;
+}
+
+.btnNewQuote:hover {
+  background: var(--navy-dark);
+}

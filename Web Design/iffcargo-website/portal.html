@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Dashboard — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--navy-light:#2a5080;--accent:#f0a500;--white:#ffffff;--off-white:#f8f9fc;--sky:#e8f4fd;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--amber:#b45309;--amber-light:#fffbeb;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--shadow:0 1px 4px rgba(27,58,92,.06);--shadow-md:0 4px 20px rgba(27,58,92,.1);--radius:12px;--radius-lg:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* sidebar */
+.sidebar{background:var(--navy-dark);display:flex;flex-direction:column;padding:0;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo img{height:32px;filter:brightness(0) invert(1)}
+.sb-user{padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:700;color:var(--white);margin-bottom:8px}
+.sb-name{font-family:var(--display);font-size:13px;font-weight:600;color:var(--white)}
+.sb-email{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.sb-item svg{color:rgba(255,255,255,.4);flex-shrink:0;transition:color .15s}
+.sb-item span{font-family:var(--display);font-size:13px;font-weight:500;color:rgba(255,255,255,.55);transition:color .15s}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item:hover svg,.sb-item:hover span{color:var(--white)}
+.sb-item.active{background:rgba(255,255,255,.1)}
+.sb-item.active svg,.sb-item.active span{color:var(--white)}
+.sb-item.active span{font-weight:700}
+.sb-section{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 12px 4px;margin-top:8px}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+
+/* main */
+.main{overflow-y:auto}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.topbar-right{display:flex;gap:10px}
+.btn-new-quote{padding:9px 18px;background:var(--navy);border:none;border-radius:8px;font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-new-quote:hover{background:var(--navy-dark)}
+.page-content{padding:32px}
+
+/* stat cards */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;box-shadow:var(--shadow)}
+.stat-label{font-family:var(--display);font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.stat-value{font-family:var(--display);font-size:28px;font-weight:800;color:var(--navy);line-height:1}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.stat-sub.up{color:var(--green)}
+
+/* quote tool */
+.section-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);margin-bottom:24px}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sc-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.sc-sub{font-size:13px;color:var(--text3);margin-top:2px}
+
+/* type tabs */
+.type-tabs{display:flex;gap:6px;margin-bottom:20px}
+.type-tab{padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:var(--display);font-size:12px;font-weight:600;color:var(--text3);transition:all .15s;background:var(--off-white)}
+.type-tab:hover{border-color:var(--navy);color:var(--navy)}
+.type-tab.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.form-col{display:flex;flex-direction:column;gap:12px}
+.col-label{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-family:var(--display)}
+.field input,.field select{height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:13px;color:var(--text);background:var(--white);transition:border-color .15s;appearance:none;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,58,92,.07)}
+.field input::placeholder{color:var(--text3)}
+
+.acc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px}
+.acc-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;cursor:pointer;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--off-white);transition:all .15s;color:var(--text2);user-select:none}
+.acc-item:hover{border-color:var(--navy)}
+.acc-item.active{border-color:var(--navy);background:var(--sky);color:var(--navy)}
+.acc-item input{display:none}
+
+.btn-quote{height:44px;padding:0 28px;background:var(--navy);border:none;border-radius:8px;font-family:var(--display);font-size:14px;font-weight:700;color:var(--white);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+.btn-quote:hover{background:var(--navy-dark)}
+.btn-quote:disabled{opacity:.4;cursor:not-allowed}
+
+/* results */
+.result-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;margin-bottom:8px;transition:all .2s;box-shadow:var(--shadow);position:relative}
+.result-card:hover{box-shadow:var(--shadow-md);border-color:var(--text3)}
+.result-card.best{border-color:var(--green);background:var(--green-light)}
+.best-flag{position:absolute;top:-1px;left:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;font-family:var(--display);letter-spacing:.04em;padding:2px 8px;border-radius:0 0 6px 6px}
+.carrier-badge{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;flex-shrink:0}
+.ri{min-width:0}
+.ri-name{font-size:14px;font-weight:700;font-family:var(--display);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.ri-svc{font-size:12px;color:var(--text2);margin-bottom:6px}
+.ri-meta{display:flex;gap:12px}
+.ri-chip{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px}
+.ri-chip.delivery{color:var(--navy);background:var(--sky);border-radius:20px;padding:2px 8px;border:1px solid var(--border)}
+.rr{text-align:right;flex-shrink:0}
+.rr-amount{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);letter-spacing:-.02em}
+.result-card.best .rr-amount{color:var(--green)}
+.rr-cur{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.rr-savings{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px}
+.live-tag{font-size:10px;background:var(--green-light);color:var(--green);border:1px solid #a7f3d0;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.sim-tag{font-size:10px;background:var(--amber-light);color:var(--amber);border:1px solid #fde68a;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.btn-book{padding:8px 16px;background:var(--navy);border:none;border-radius:6px;font-family:var(--display);font-size:12px;font-weight:700;color:var(--white);cursor:pointer;transition:all .15s;white-space:nowrap;margin-top:8px;width:100%}
+.btn-book:hover{background:var(--navy-dark)}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{width:48px;height:48px;background:var(--off-white);border:1.5px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:13px;padding:16px 0}
+
+/* quote expiry */
+.quote-expiry{font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px}
+.quote-expiry.live{background:var(--green-light);color:var(--green)}
+.quote-expiry.expired{background:var(--off-white);color:var(--text3);text-decoration:line-through}
+.btn-book-quote{padding:5px 14px;background:var(--navy);border:none;border-radius:6px;font-family:var(--display);font-size:11px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-book-quote:hover{background:var(--navy-dark)}
+.btn-book-quote:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+.carrier-dot{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--text)}
+.carrier-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+td:first-child{font-weight:600;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--off-white)}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--display)}
+.status-delivered{background:var(--green-light);color:var(--green)}
+.status-transit{background:var(--sky);color:var(--navy)}
+.status-pending{background:var(--amber-light);color:var(--amber)}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-logo">
+  <a href="index.html" title="Back to website">
+    <img src="logo-white.svg" alt="IFF" style="height:36px;width:auto;display:block"/>
+  </a>
+</div>
+  <div class="sb-user">
+    <div class="sb-avatar">JS</div>
+    <div class="sb-name">John Smith</div>
+    <div class="sb-email">john@acmecorp.com</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item" href="quote.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Get a quote</span></a>
+    <a class="sb-item active" href="portal.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="sb-item" href="shipments.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>My shipments</span></a>
+    <a class="sb-item" href="track.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Track shipment</span></a>
+    <a class="sb-item" href="claims.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>Claims</span></a>
+    <div class="sb-section">Account</div>
+    <a class="sb-item" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+    <a class="sb-item" href="billing.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Billing</span></a>
+    <a class="sb-item" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Back to website</span></a>
+  </nav>
+  <div class="sb-bottom">
+    <a class="sb-item" href="index.html" style="text-decoration:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Sign out</span>
+    </a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <button class="btn-new-quote" onclick="window.location.href='quote.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New quote
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Shipments this month</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub up">↑ 3 from last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total spent (CAD)</div>
+        <div class="stat-value">$4,218</div>
+        <div class="stat-sub">This month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In transit</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Active shipments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Saved vs list rate</div>
+        <div class="stat-value">$681</div>
+        <div class="stat-sub up">↑ With IFF rates</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="section-card" style="background:linear-gradient(135deg,var(--navy-dark),var(--navy));border:none;margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-family:var(--display);font-size:18px;font-weight:700;color:#fff;margin-bottom:6px">Ready to ship?</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6)">Get instant quotes from all carriers — envelope, parcel, LTL, air, ocean and more.</div>
+        </div>
+        <a href="quote.html" style="flex-shrink:0;padding:14px 28px;background:var(--accent);border-radius:10px;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px;margin-left:32px;transition:all .2s">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Get a quote
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent quotes -->
+    <div class="section-card">
+      <div class="sc-header">
+        <div>
+          <div class="sc-title">Recent quotes</div>
+          <div class="sc-sub">Quotes are bookable until end of day they were generated</div>
+        </div>
+        <a href="quote.html" style="font-family:var(--display);font-size:12px;font-weight:600;color:var(--navy);text-decoration:none;display:flex;align-items:center;gap:4px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          New quote
+        </a>
+      </div>
+      <div class="table-wrap">
+        <table id="quotesTable">
+          <thead>
+            <tr>
+              <th>Quote #</th>
+              <th>Route</th>
+              <th>Type</th>
+              <th>Best carrier</th>
+              <th>Service</th>
+              <th>Rate</th>
+              <th>Est. delivery</th>
+              <th>Quoted at</th>
+              <th>Expires</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="quotesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent shipments -->
+    <div class="section-card">
+      <div class="sc-header">
+        <div>
+          <div class="sc-title">Recent shipments</div>
+          <div class="sc-sub">Your last 5 bookings</div>
+        </div>
+        <a href="#" style="font-family:var(--display);font-size:12px;font-weight:600;color:var(--navy);text-decoration:none">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tracking #</th><th>Route</th><th>Carrier</th><th>Service</th><th>Date</th><th>Cost</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1Z999AA1234567890</td><td>Toronto → Chicago</td><td>FedEx Freight</td><td>Freight Economy</td><td>May 20</td><td>C$312.40</td><td><span class="status-badge status-delivered">● Delivered</span></td></tr>
+            <tr><td>7489234572834</td><td>Toronto → New York</td><td>XPO Logistics</td><td>Standard LTL</td><td>May 18</td><td>C$228.75</td><td><span class="status-badge status-delivered">● Delivered</span></td></tr>
+            <tr><td>1Z888BB9876543210</td><td>Mississauga → Detroit</td><td>Day & Ross</td><td>Freight Priority</td><td>May 22</td><td>C$185.60</td><td><span class="status-badge status-transit">↦ In transit</span></td></tr>
+            <tr><td>MAN-2026-00481</td><td>Toronto → Montreal</td><td>Manitoulin</td><td>Standard LTL</td><td>May 23</td><td>C$142.30</td><td><span class="status-badge status-transit">↦ In transit</span></td></tr>
+            <tr><td>POL-2026-00192</td><td>Brampton → Ottawa</td><td>Polaris</td><td>Ground</td><td>May 25</td><td>C$98.50</td><td><span class="status-badge status-pending">○ Pending pickup</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SERVER = 'http://localhost:4000';
+const CARRIERS = [
+  {id:'fedex',name:'FedEx',abbr:'FX',bg:'#eff4ff',color:'#1a56db',bc:'#c7d7fd'},
+  {id:'xpo',name:'XPO Logistics',abbr:'XPO',bg:'#fdf2f2',color:'#c81e1e',bc:'#fbd5d5'},
+  {id:'dayross',name:'Day & Ross',abbr:'D&R',bg:'#eff4ff',color:'#1e429f',bc:'#c7d7fd'},
+  {id:'manitoulin',name:'Manitoulin',abbr:'MAN',bg:'#edfaf4',color:'#057a55',bc:'#a7f3d0'},
+  {id:'polaris',name:'Polaris',abbr:'POL',bg:'#f5f3ff',color:'#5521b5',bc:'#ddd6fe'},
+];
+
+// MARKUP ENGINE — IFF applies markup before showing rates to customers
+function applyMarkup(baseRate) {
+  if (baseRate <= 100) return baseRate * 1.70;
+  if (baseRate <= 250) return baseRate * 1.55;
+  if (baseRate <= 500) return baseRate * 1.40;
+  if (baseRate <= 1000) return baseRate * 1.30;
+  if (baseRate <= 2500) return baseRate * 1.20;
+  return baseRate * 1.15;
+}
+
+let currentType = 'envelope';
+let fedexLive = false;
+
+// ── Recent quotes ────────────────────────────────────────
+const _today = new Date();
+const _endOfDay = new Date(_today.getFullYear(), _today.getMonth(), _today.getDate(), 23, 59, 59);
+
+const recentQuotes = [
+  { id:'Q-2026-0091', route:'Toronto → Chicago', type:'LTL Freight', carrier:'FedEx Freight', carrierColor:'#1a56db', service:'Freight Economy', rate:'C$312.40', delivery:'Tue, May 27', quotedAt: new Date(_today.getFullYear(),_today.getMonth(),_today.getDate(),9,14,0), sameDay:true },
+  { id:'Q-2026-0090', route:'Mississauga → Detroit', type:'Parcel', carrier:'Day & Ross', carrierColor:'#1e429f', service:'Express Saver', rate:'C$48.20', delivery:'Mon, May 26', quotedAt: new Date(_today.getFullYear(),_today.getMonth(),_today.getDate(),8,52,0), sameDay:true },
+  { id:'Q-2026-0089', route:'Toronto → Montreal', type:'Envelope', carrier:'FedEx', carrierColor:'#1a56db', service:'Priority Overnight', rate:'C$24.80', delivery:'Mon, May 26', quotedAt: new Date(_today.getFullYear(),_today.getMonth(),_today.getDate()-1,16,38,0), sameDay:false },
+  { id:'Q-2026-0088', route:'Brampton → New York', type:'LTL Freight', carrier:'XPO Logistics', carrierColor:'#c81e1e', service:'Standard LTL', rate:'C$228.75', delivery:'Wed, May 28', quotedAt: new Date(_today.getFullYear(),_today.getMonth(),_today.getDate()-1,14,5,0), sameDay:false },
+  { id:'Q-2026-0087', route:'Toronto → Ottawa', type:'Parcel', carrier:'Polaris', carrierColor:'#5521b5', service:'Ground', rate:'C$38.50', delivery:'Tue, May 27', quotedAt: new Date(_today.getFullYear(),_today.getMonth(),_today.getDate()-2,11,22,0), sameDay:false },
+];
+
+function _fmtTime(d){ return d.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}); }
+function _fmtQuoteDate(d){
+  const diff = Math.floor((_today - d) / 86400000);
+  if(diff === 0) return `Today · ${_fmtTime(d)}`;
+  if(diff === 1) return `Yesterday · ${_fmtTime(d)}`;
+  return d.toLocaleDateString('en-CA',{month:'short',day:'numeric'}) + ' · ' + _fmtTime(d);
+}
+
+function renderQuotes() {
+  const tbody = document.getElementById('quotesBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const expiryStr = _endOfDay.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+  recentQuotes.forEach(q => {
+    const bookable = q.sameDay && new Date() <= _endOfDay;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text)">${q.id}</td>
+      <td style="color:var(--text);font-weight:600">${q.route}</td>
+      <td><span style="font-size:11px;background:var(--off-white);padding:2px 8px;border-radius:6px;font-family:var(--display);font-weight:600;color:var(--text2);white-space:nowrap">${q.type}</span></td>
+      <td style="font-weight:600;color:${q.carrierColor};white-space:nowrap">
+        <span style="display:inline-flex;align-items:center;gap:5px">
+          <span style="width:7px;height:7px;border-radius:50%;background:${q.carrierColor};display:inline-block;flex-shrink:0"></span>
+          ${q.carrier}
+        </span>
+      </td>
+      <td style="font-size:12px;color:var(--text2)">${q.service}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--navy)">${q.rate}</td>
+      <td style="font-size:12px;color:var(--text2);white-space:nowrap">${q.delivery}</td>
+      <td style="font-size:12px;color:var(--text3);white-space:nowrap">${_fmtQuoteDate(q.quotedAt)}</td>
+      <td style="white-space:nowrap">
+        ${bookable
+          ? `<span style="font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:var(--green-light);color:var(--green)">⏱ Expires ${expiryStr}</span>`
+          : `<span style="font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:10px;background:var(--off-white);color:var(--text3);text-decoration:line-through">Expired</span>`}
+      </td>
+      <td>
+        <button onclick="bookQuote('${q.id}',this)" ${bookable?'':'disabled'}
+          style="padding:5px 14px;border:none;border-radius:6px;font-family:var(--display);font-size:11px;font-weight:700;color:#fff;cursor:${bookable?'pointer':'not-allowed'};background:${bookable?'var(--navy)':'var(--border)'};color:${bookable?'#fff':'var(--text3)'};white-space:nowrap;transition:all .15s">
+          ${bookable ? 'Book →' : 'Expired'}
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function bookQuote(id, btn) {
+  btn.textContent = '✓ Booked';
+  btn.disabled = true;
+  btn.style.background = 'var(--green)';
+  btn.style.color = '#fff';
+  btn.style.cursor = 'not-allowed';
+  // In production: POST to /api/bookings with quote ID
+}
+
+renderQuotes();
+
+// ── Server health check ────────────────────────────────────
+async function checkServer() {
+  try {
+    const res = await fetch(`${SERVER}/health`, {signal: AbortSignal.timeout(3000)});
+    const data = await res.json();
+    fedexLive = data.carriers?.fedex === true;
+  } catch {}
+}
+
+function setType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-tab[data-type]').forEach(t => t.classList.toggle('active', t.dataset.type === type));
+  document.getElementById('detailsEnvelope').style.display = type === 'envelope' ? 'grid' : 'none';
+  document.getElementById('detailsParcel').style.display = type === 'parcel' ? 'block' : 'none';
+  document.getElementById('detailsFreight').style.display = type === 'freight' ? 'block' : 'none';
+}
+
+function toggleAcc(el) {
+  el.classList.toggle('active');
+  el.querySelector('input').checked = el.classList.contains('active');
+}
+
+function getFields() {
+  const t = currentType;
+  if (t === 'envelope') return {weight:parseFloat(document.getElementById('weightEnv').value)||0,pieces:parseInt(document.getElementById('piecesEnv').value)||1,pickupDate:document.getElementById('pickupEnv').value,currency:document.getElementById('currencyEnv').value,dimL:12,dimW:9,dimH:1,freightClass:'50'};
+  if (t === 'parcel') return {weight:parseFloat(document.getElementById('weightParcel').value)||0,pieces:parseInt(document.getElementById('piecesParcel').value)||1,pickupDate:document.getElementById('pickupParcel').value,currency:document.getElementById('currencyParcel').value,dimL:document.getElementById('dimLParcel').value||12,dimW:document.getElementById('dimWParcel').value||12,dimH:document.getElementById('dimHParcel').value||12,freightClass:'70'};
+  return {weight:parseFloat(document.getElementById('weightFreight').value)||0,pieces:parseInt(document.getElementById('piecesFreight').value)||1,pickupDate:document.getElementById('pickupFreight').value,currency:document.getElementById('currencyFreight').value,dimL:document.getElementById('dimLFreight').value||48,dimW:document.getElementById('dimWFreight').value||40,dimH:document.getElementById('dimHFreight').value||48,freightClass:document.getElementById('freightClassVal').value};
+}
+
+function calcDelivery(days, pickupDate) {
+  if (!days) return null;
+  const base = pickupDate ? new Date(pickupDate+'T12:00:00') : new Date();
+  const d = new Date(base);
+  let added = 0;
+  while (added < parseInt(days)) { d.setDate(d.getDate()+1); if (d.getDay()!==0&&d.getDay()!==6) added++; }
+  return d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+}
+
+function simulateRate(carrier, type, weight, cls, orig, dest, accessorials, pickupDate) {
+  const seed=(carrier.id+orig+dest+type).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const rng=((seed*9301+49297)%233280)/233280;
+  const rng2=((seed*6271+8831)%233280)/233280;
+  let base;
+  if(type==='envelope') base=18+rng*35;
+  else if(type==='parcel') base=22+rng*55+(weight/10)*(7+rng2*6);
+  else{const clsM={'50':1,'55':1.05,'60':1.1,'65':1.15,'70':1.2,'77.5':1.3,'85':1.4,'92.5':1.5,'100':1.65,'110':1.8,'125':2,'150':2.3}[String(cls)]||1;base=(55+rng*85)*(weight/100)*clsM;}
+  accessorials.forEach(a=>{if(a==='liftgate_pickup'||a==='liftgate_delivery')base+=55+rng2*30;if(a==='residential')base+=22+rng2*12;if(a==='appointment')base+=38+rng2*10;if(a==='inside_delivery')base+=75+rng2*20;if(a==='hazmat')base+=145+rng2*55;if(a==='saturday')base+=32+rng2*15;if(a==='signature')base+=7+rng2*4;});
+  const transitDays=type==='envelope'?Math.ceil(1+rng2*2):type==='parcel'?Math.ceil(1+rng2*3):Math.ceil(2+rng2*4);
+  const services={envelope:['Express Saver','Priority Overnight','Standard Overnight','Economy Select'],parcel:['Ground','Express Saver','2Day','Priority Overnight'],freight:['Freight Economy','Freight Priority','Standard LTL']};
+  const service=services[type][Math.floor(rng*services[type].length)];
+  return{rate:Math.max(Math.round((base+(rng-0.5)*8)*100)/100,type==='envelope'?12:type==='parcel'?15:110),transitDays,deliveryDate:calcDelivery(transitDays,pickupDate),service,live:false};
+}
+
+async function getQuotes() {
+  const origCity=document.getElementById('origCity').value.trim();
+  const origPostal=document.getElementById('origPostal').value.trim().replace(/\s/g,'');
+  const origCountry=document.getElementById('origCountry').value;
+  const destCity=document.getElementById('destCity').value.trim();
+  const destPostal=document.getElementById('destPostal').value.trim().replace(/\s/g,'');
+  const destCountry=document.getElementById('destCountry').value;
+  const declaredValue=document.getElementById('declaredValue').value;
+  const accessorials=[...document.querySelectorAll('.acc-item input:checked')].map(i=>i.value);
+  const{weight,pieces,pickupDate,currency,dimL,dimW,dimH,freightClass}=getFields();
+
+  if(!origCity&&!origPostal){alert('Please enter an origin.');return;}
+  if(!destCity&&!destPostal){alert('Please enter a destination.');return;}
+  if(!weight){alert('Please enter the weight.');return;}
+  if(currentType==='freight'&&!freightClass){alert('Please select a freight class.');return;}
+
+  const btn=document.getElementById('getQuotesBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,.3)"></div> Fetching…';
+  document.getElementById('resultsArea').innerHTML='<div class="loading-row"><div class="spinner"></div> Querying all carriers…</div>';
+
+  await new Promise(r=>setTimeout(r,900));
+
+  const results = await Promise.all(CARRIERS.map(async c => {
+    if(c.id==='fedex'&&fedexLive){
+      try{
+        const body={origPostal:origPostal||origCity,origCountry,destPostal:destPostal||destCity,destCountry,weight,freightClass:freightClass||'70',pieces,dimL,dimW,dimH,currency};
+        if(pickupDate)body.pickupDate=pickupDate;
+        if(declaredValue)body.declaredValue=declaredValue;
+        if(accessorials.length)body.accessorials=accessorials;
+        const res=await fetch(`${SERVER}/api/rate/fedex`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+        const data=await res.json();
+        if(data.rates&&data.rates.length){
+          const best=data.rates[0];
+          const deliveryDate=best.deliveryDate||calcDelivery(best.transitDays,pickupDate);
+          return{carrier:c,rate:best.rate,transitDays:best.transitDays,deliveryDate,service:best.serviceName,live:true};
+        }
+      }catch(e){}
+    }
+    return{carrier:c,...simulateRate(c,currentType,weight,freightClass,origPostal||origCity,destPostal||destCity,accessorials,pickupDate)};
+  }));
+
+  // Apply IFF markup to all rates before displaying
+  const sorted=results.map(r=>({...r,displayRate:Math.round(applyMarkup(r.rate)*100)/100})).sort((a,b)=>a.displayRate-b.displayRate);
+  const cheapest=sorted[0]?.displayRate||0;
+  const typeLabel={envelope:'Envelope',parcel:'Parcel',freight:'LTL Freight'}[currentType];
+
+  let html='';
+  sorted.forEach((r,i)=>{
+    const isBest=i===0;
+    const savings=i>0?(r.displayRate-cheapest).toFixed(2):0;
+    const cur=currency;
+    const sym=cur==='CAD'?'C$':'$';
+    const transitStr=r.transitDays?`${r.transitDays}–${parseInt(r.transitDays)+1} business days`:'—';
+    html+=`<div class="result-card${isBest?' best':''}">
+      ${isBest?'<div class="best-flag">★ BEST RATE</div>':''}
+      <div class="carrier-badge" style="background:${r.carrier.bg};color:${r.carrier.color};border:1.5px solid ${r.carrier.bc}">${r.carrier.abbr}</div>
+      <div class="ri">
+        <div class="ri-name">${r.carrier.name}<span class="${r.live?'live-tag':'sim-tag'}">${r.live?'● live':'~ est.'}</span></div>
+        <div class="ri-svc">${r.service||typeLabel}</div>
+        <div class="ri-meta">
+          <span class="ri-chip">⏱ ${transitStr}</span>
+          ${r.deliveryDate?`<span class="ri-chip delivery">📅 Est. ${r.deliveryDate}</span>`:''}
+        </div>
+      </div>
+      <div class="rr">
+        <div class="rr-amount">${sym}${r.displayRate.toFixed(2)}</div>
+        <div class="rr-cur">${cur}</div>
+        ${isBest?'':`<div class="rr-savings">+$${savings} vs best</div>`}
+        <button class="btn-book">Book this rate →</button>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('resultsArea').innerHTML=html;
+  document.getElementById('resultsArea').scrollIntoView({behavior:'smooth',block:'nearest'});
+  btn.disabled=false;
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Get quotes from all carriers';
+}
+
+const today=new Date().toISOString().split('T')[0];
+['pickupEnv','pickupParcel','pickupFreight'].forEach(id=>document.getElementById(id).value=today);
+setType('envelope');
+checkServer();
+</script>
+</body>
+</html>

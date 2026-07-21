@@ -1,0 +1,71 @@
+.header {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.btnSave {
+  height: 44px;
+  padding: 0 28px;
+  background: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnSave:hover {
+  background: var(--navy-dark);
+}
+
+.btnSave:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.btnDanger {
+  height: 40px;
+  padding: 0 20px;
+  background: transparent;
+  border: 1.5px solid var(--red);
+  border-radius: 8px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 20px;
+}
+
+.btnDanger:hover {
+  background: var(--red-light);
+}
+
+.success {
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}

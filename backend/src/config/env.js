@@ -1,0 +1,22 @@
+require('dotenv').config();
+
+module.exports = {
+  port: parseInt(process.env.PORT, 10) || 4000,
+  jwtSecret: process.env.JWT_SECRET || 'dev-secret',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+  bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,
+  carriers: {
+    fedex: {
+      apiKey: process.env.FEDEX_API_KEY,
+      secretKey: process.env.FEDEX_SECRET_KEY,
+      accountNumber: process.env.FEDEX_ACCOUNT_NUMBER,
+    },
+    xpo: { apiKey: process.env.XPO_API_KEY },
+    dayross: {
+      apiKey: process.env.DAYROSS_API_KEY,
+      division: process.env.DAYROSS_DIVISION,
+    },
+    manitoulin: { apiKey: process.env.MANITOULIN_API_KEY },
+    polaris: { apiKey: process.env.POLARIS_API_KEY },
+  },
+};

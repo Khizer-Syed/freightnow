@@ -1,0 +1,125 @@
+.sidebar {
+  background: var(--navy-dark);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.logo img {
+  height: 36px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+.user {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.name {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.email {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+  margin-top: 2px;
+}
+
+.nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+}
+
+.item svg {
+  color: rgba(255,255,255,.4);
+  flex-shrink: 0;
+  transition: color .15s;
+}
+
+.item span {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,.55);
+  transition: color .15s;
+}
+
+.item:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.item:hover svg,
+.item:hover span {
+  color: var(--white);
+}
+
+.active {
+  background: rgba(255,255,255,.1);
+}
+
+.active svg,
+.active span {
+  color: var(--white);
+}
+
+.active span {
+  font-weight: 700;
+}
+
+.section {
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.2);
+  padding: 12px 12px 4px;
+  margin-top: 8px;
+}
+
+.bottom {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}

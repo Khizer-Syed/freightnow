@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Get a Quote — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--accent:#f0a500;--white:#fff;--off-white:#f8f9fc;--sky:#e8f4fd;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--green-border:#a7f3d0;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--shadow:0 1px 4px rgba(27,58,92,.06);--shadow-md:0 4px 20px rgba(27,58,92,.1);--radius:12px;--radius-lg:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--navy-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo img{height:36px;width:auto;display:block}
+.sb-user{padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;margin-bottom:8px}
+.sb-name{font-family:var(--display);font-size:13px;font-weight:600;color:#fff}
+.sb-email{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.sb-item svg{color:rgba(255,255,255,.4);flex-shrink:0}
+.sb-item span{font-family:var(--display);font-size:13px;font-weight:500;color:rgba(255,255,255,.55)}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item:hover svg,.sb-item:hover span{color:#fff}
+.sb-item.active{background:rgba(255,255,255,.1)}
+.sb-item.active svg,.sb-item.active span{color:#fff;font-weight:700}
+.sb-section{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 12px 4px;margin-top:8px}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.main{overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;box-shadow:var(--shadow)}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.page-content{padding:32px}
+.section-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+
+/* type grid */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.type-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;text-align:center;transition:all .15s;background:var(--off-white);display:flex;flex-direction:column;align-items:center;gap:8px}
+.type-card:hover{border-color:var(--border);background:#fff;box-shadow:var(--shadow)}
+.type-card.active{background:var(--sky);border-color:var(--navy)}
+.type-card.spot-type{border-color:var(--amber-border);background:var(--amber-light)}
+.type-card.spot-type:hover{border-color:var(--amber);background:var(--amber-light)}
+.type-card.spot-type.active{border-color:var(--amber);background:var(--amber-light)}
+.type-card svg{color:var(--text3);transition:color .15s}
+.type-card.active svg{color:var(--navy)}
+.type-card.spot-type svg{color:var(--amber)}
+.type-label{font-family:var(--display);font-size:12px;font-weight:700;color:var(--text2)}
+.type-card.active .type-label{color:var(--navy)}
+.type-card.spot-type .type-label{color:var(--amber)}
+.type-sub{font-size:10px;color:var(--text3)}
+.type-tag{font-size:10px;font-family:var(--display);font-weight:600;padding:2px 8px;border-radius:10px}
+.tag-instant{background:var(--green-light);color:var(--green)}
+.tag-spot{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-family:var(--display)}
+.field input,.field select,.field textarea{width:100%;padding:0 12px;height:40px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:13px;color:var(--text);background:#fff;transition:border-color .15s;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,58,92,.07)}
+.field textarea{height:auto;padding:10px 12px;resize:none}
+
+.col-label{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.form-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px}
+
+.acc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px}
+.acc-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;cursor:pointer;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--off-white);transition:all .15s;color:var(--text2);user-select:none}
+.acc-item:hover{border-color:var(--navy)}
+.acc-item.active{border-color:var(--navy);background:var(--sky);color:var(--navy)}
+.acc-item input{display:none}
+
+.btn-quote{height:48px;padding:0 32px;background:var(--navy);border:none;border-radius:var(--radius);font-family:var(--display);font-size:15px;font-weight:700;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.btn-quote:hover{background:var(--navy-dark)}
+.btn-quote:disabled{opacity:.4;cursor:not-allowed}
+.btn-spot-submit{height:48px;padding:0 32px;background:var(--amber);border:none;border-radius:var(--radius);font-family:var(--display);font-size:15px;font-weight:700;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.btn-spot-submit:hover{background:var(--accent-dark,#d4920a)}
+
+/* spot rate info box */
+.spot-info{background:var(--amber-light);border:1.5px solid var(--amber-border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;display:flex;gap:14px;align-items:flex-start}
+.spot-info-text h4{font-family:var(--display);font-size:14px;font-weight:700;color:var(--amber);margin-bottom:4px}
+.spot-info-text p{font-size:13px;color:var(--amber);opacity:.85;line-height:1.6}
+
+/* results */
+.result-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;margin-bottom:8px;transition:all .2s;box-shadow:var(--shadow);position:relative}
+.result-card:hover{box-shadow:var(--shadow-md);border-color:var(--text3)}
+.result-card.best{border-color:var(--green);background:var(--green-light)}
+.best-flag{position:absolute;top:-1px;left:16px;background:var(--green);color:#fff;font-size:10px;font-weight:700;font-family:var(--display);letter-spacing:.04em;padding:2px 8px;border-radius:0 0 6px 6px}
+.carrier-badge{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;flex-shrink:0}
+.ri{min-width:0}
+.ri-name{font-size:14px;font-weight:700;font-family:var(--display);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.ri-svc{font-size:12px;color:var(--text2);margin-bottom:6px}
+.ri-meta{display:flex;gap:12px;flex-wrap:wrap}
+.ri-chip{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px}
+.ri-chip.delivery{color:var(--navy);background:var(--sky);border-radius:20px;padding:2px 8px;border:1px solid var(--border)}
+.rr{text-align:right;flex-shrink:0}
+.rr-amount{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text);letter-spacing:-.02em}
+.result-card.best .rr-amount{color:var(--green)}
+.rr-cur{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.rr-savings{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px}
+.btn-book{padding:8px 16px;background:var(--navy);border:none;border-radius:6px;font-family:var(--display);font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap;margin-top:8px;width:100%}
+.btn-book:hover{background:var(--navy-dark)}
+.live-tag{font-size:10px;background:var(--green-light);color:var(--green);border:1px solid var(--green-border);padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.sim-tag{font-size:10px;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);padding:1px 6px;border-radius:10px;font-family:var(--mono)}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:13px;padding:16px 0}
+.loading-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .65s linear infinite}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.success-box{background:var(--green-light);border:1px solid var(--green-border);border-radius:var(--radius);padding:20px 24px;font-size:14px;color:var(--green);display:none;align-items:center;gap:12px;margin-top:16px;line-height:1.6}
+.success-box.show{display:flex}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo"><a href="index.html"><img src="logo-white.svg" alt="IFF"/></a></div>
+  <div class="sb-user"><div class="sb-avatar">JS</div><div class="sb-name">John Smith</div><div class="sb-email">john@acmecorp.com</div></div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item active" href="quote.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Get a quote</span></a>
+    <a class="sb-item" href="portal.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="sb-item" href="shipments.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>My shipments</span></a>
+    <a class="sb-item" href="track.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Track shipment</span></a>
+    <a class="sb-item" href="claims.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>Claims</span></a>
+    <div class="sb-section">Account</div>
+    <a class="sb-item" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+    <a class="sb-item" href="billing.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Billing</span></a>
+    <a class="sb-item" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Back to website</span></a>
+  </nav>
+  <div class="sb-bottom"><a class="sb-item" href="login.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign out</span></a></div>
+</aside>
+
+<div class="main">
+  <div class="topbar"><div class="topbar-title">Get a quote</div></div>
+  <div class="page-content">
+
+    <div class="section-card">
+      <!-- Shipment type selector -->
+      <div style="font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Select shipment type</div>
+      <div class="type-grid">
+        <div class="type-card active" data-type="envelope" onclick="setType('envelope')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="m2 6 10 8 10-8"/></svg>
+          <div class="type-label">Envelope</div>
+          <div class="type-sub">Letters, documents</div>
+          <span class="type-tag tag-instant">⚡ Instant quote</span>
+        </div>
+        <div class="type-card" data-type="parcel" onclick="setType('parcel')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <div class="type-label">Parcel</div>
+          <div class="type-sub">Boxes, packages</div>
+          <span class="type-tag tag-instant">⚡ Instant quote</span>
+        </div>
+        <div class="type-card" data-type="ltl" onclick="setType('ltl')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <div class="type-label">LTL Freight</div>
+          <div class="type-sub">Pallets, less-than-truckload</div>
+          <span class="type-tag tag-instant">⚡ Instant quote</span>
+        </div>
+        <div class="type-card spot-type" data-type="ftl" onclick="setType('ftl')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+          <div class="type-label">FTL Freight</div>
+          <div class="type-sub">Full truckload</div>
+          <span class="type-tag tag-spot">✉ Spot rate</span>
+        </div>
+        <div class="type-card spot-type" data-type="air" onclick="setType('air')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+          <div class="type-label">Air Freight</div>
+          <div class="type-sub">Import &amp; export</div>
+          <span class="type-tag tag-spot">✉ Spot rate</span>
+        </div>
+        <div class="type-card spot-type" data-type="ocean" onclick="setType('ocean')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-8 4 4 4-6 4 10"/><path d="M3 21h18"/></svg>
+          <div class="type-label">Ocean Freight</div>
+          <div class="type-sub">LCL &amp; FCL import/export</div>
+          <span class="type-tag tag-spot">✉ Spot rate</span>
+        </div>
+      </div>
+
+      <!-- Origin & Destination (always shown) -->
+      <div class="form-cols">
+        <div>
+          <div class="col-label">Origin</div>
+          <div class="field"><label>City</label><input id="origCity" placeholder="e.g. Toronto"/></div>
+          <div class="grid2">
+            <div class="field"><label>Postal / ZIP</label><input id="origPostal" placeholder="M5V 3A8"/></div>
+            <div class="field"><label>Country</label><select id="origCountry"><option value="CA">Canada</option><option value="US">USA</option><option value="CN">China</option><option value="GB">UK</option><option value="DE">Germany</option><option value="other">Other</option></select></div>
+          </div>
+        </div>
+        <div>
+          <div class="col-label">Destination</div>
+          <div class="field"><label>City</label><input id="destCity" placeholder="e.g. Chicago"/></div>
+          <div class="grid2">
+            <div class="field"><label>Postal / ZIP</label><input id="destPostal" placeholder="60601"/></div>
+            <div class="field"><label>Country</label><select id="destCountry"><option value="US">USA</option><option value="CA">Canada</option><option value="CN">China</option><option value="GB">UK</option><option value="DE">Germany</option><option value="other">Other</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSTANT QUOTE fields -->
+      <div id="instantFields">
+        <div id="detailsEnvelope" class="grid4" style="margin-bottom:14px">
+          <div class="field"><label>Weight (lbs)</label><input type="number" id="weightEnv" placeholder="0.5" min="0.1" step="0.1"/></div>
+          <div class="field"><label>Pieces</label><input type="number" id="piecesEnv" value="1" min="1"/></div>
+          <div class="field"><label>Pickup date</label><input type="date" id="pickupEnv"/></div>
+          <div class="field"><label>Currency</label><select id="currencyEnv"><option value="CAD">CAD</option><option value="USD">USD</option></select></div>
+        </div>
+        <div id="detailsParcel" style="display:none;margin-bottom:14px">
+          <div class="grid4" style="margin-bottom:10px">
+            <div class="field"><label>Weight (lbs)</label><input type="number" id="weightParcel" placeholder="10" min="0.1"/></div>
+            <div class="field"><label>Pieces</label><input type="number" id="piecesParcel" value="1" min="1"/></div>
+            <div class="field"><label>Pickup date</label><input type="date" id="pickupParcel"/></div>
+            <div class="field"><label>Currency</label><select id="currencyParcel"><option value="CAD">CAD</option><option value="USD">USD</option></select></div>
+          </div>
+          <div class="grid3"><div class="field"><label>Length (in)</label><input type="number" id="dimLParcel" placeholder="12"/></div><div class="field"><label>Width (in)</label><input type="number" id="dimWParcel" placeholder="12"/></div><div class="field"><label>Height (in)</label><input type="number" id="dimHParcel" placeholder="12"/></div></div>
+        </div>
+        <div id="detailsLtl" style="display:none;margin-bottom:14px">
+          <div class="grid4" style="margin-bottom:10px">
+            <div class="field"><label>Weight (lbs)</label><input type="number" id="weightLtl" placeholder="500" min="1"/></div>
+            <div class="field"><label>Pieces</label><input type="number" id="piecesLtl" value="1" min="1"/></div>
+            <div class="field"><label>Freight class</label><select id="freightClass"><option value="">— select —</option><option>50</option><option>55</option><option>60</option><option>65</option><option>70</option><option>77.5</option><option>85</option><option>92.5</option><option>100</option><option>110</option><option>125</option><option>150</option><option>175</option><option>200</option><option>250</option><option>300</option></select></div>
+            <div class="field"><label>Currency</label><select id="currencyLtl"><option value="CAD">CAD</option><option value="USD">USD</option></select></div>
+          </div>
+          <div class="grid4"><div class="field"><label>Length (in)</label><input type="number" id="dimLLtl" placeholder="48"/></div><div class="field"><label>Width (in)</label><input type="number" id="dimWLtl" placeholder="40"/></div><div class="field"><label>Height (in)</label><input type="number" id="dimHLtl" placeholder="48"/></div><div class="field"><label>Pickup date</label><input type="date" id="pickupLtl"/></div></div>
+        </div>
+
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="field"><label>Declared value ($)</label><input type="number" id="declaredValue" placeholder="Optional"/></div>
+          <div class="field"><label>Commodity</label><input id="commodity" placeholder="e.g. Auto parts"/></div>
+        </div>
+
+        <div style="font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Accessorials</div>
+        <div class="acc-grid">
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="liftgate_pickup"> Liftgate pickup</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="liftgate_delivery"> Liftgate delivery</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="residential"> Residential</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="appointment"> Appointment</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="inside_delivery"> Inside delivery</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="hazmat"> Hazmat</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="signature"> Signature req.</label>
+          <label class="acc-item" onclick="toggleAcc(this)"><input type="checkbox" value="saturday"> Saturday delivery</label>
+        </div>
+
+        <button class="btn-quote" id="getQuotesBtn" onclick="getQuotes()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Get quotes from all carriers
+        </button>
+      </div>
+
+      <!-- SPOT RATE fields -->
+      <div id="spotFields" style="display:none">
+        <div class="spot-info">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;color:var(--amber)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="spot-info-text">
+            <h4 id="spotTitle">Spot rate request</h4>
+            <p id="spotDesc">This shipment type requires a custom quote. Fill in the details below and our team will respond within 2–4 business hours with a competitive rate.</p>
+          </div>
+        </div>
+
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="field"><label>Total weight (lbs)</label><input type="number" id="spotWeight" placeholder="e.g. 5000"/></div>
+          <div class="field"><label>Total pieces / units</label><input type="number" id="spotPieces" placeholder="e.g. 1 container"/></div>
+        </div>
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="field"><label>Dimensions (L × W × H)</label><input id="spotDims" placeholder="e.g. 48 × 40 × 60 in per pallet"/></div>
+          <div class="field"><label>Ready / pickup date</label><input type="date" id="spotDate"/></div>
+        </div>
+        <div id="airOceanFields" style="display:none">
+          <div class="grid2" style="margin-bottom:14px">
+            <div class="field"><label>Origin port / airport</label><input id="spotOrigPort" placeholder="e.g. YYZ, Port of Toronto"/></div>
+            <div class="field"><label>Destination port / airport</label><input id="spotDestPort" placeholder="e.g. ORD, Port of Chicago"/></div>
+          </div>
+        </div>
+        <div id="oceanFields" style="display:none;margin-bottom:14px">
+          <div class="field"><label>Ocean service type</label><select id="oceanType"><option>LCL — Less than container load</option><option>FCL — 20ft container</option><option>FCL — 40ft container</option><option>FCL — 40ft high cube</option></select></div>
+        </div>
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="field"><label>Commodity / cargo description</label><input id="spotCommodity" placeholder="e.g. Auto parts, electronics"/></div>
+          <div class="field"><label>Declared value (CAD or USD)</label><input type="number" id="spotValue" placeholder="Optional"/></div>
+        </div>
+        <div class="field" style="margin-bottom:20px"><label>Special requirements or notes</label><textarea id="spotNotes" rows="3" placeholder="Dangerous goods class, temperature controlled, fragile, customs brokerage needed, insurance, etc."></textarea></div>
+
+        <button class="btn-spot-submit" onclick="submitSpotRate()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send spot rate request to IFF Cargo
+        </button>
+
+        <div class="success-box" id="spotSuccessBox">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div><strong>Request sent!</strong> Our team will review your shipment and respond with a quote within 2–4 business hours. You'll receive an email confirmation at john@acmecorp.com. Call us at <strong>416 798 4151</strong> if you need an urgent response.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsArea"></div>
+
+  </div>
+</div>
+
+<script>
+const SERVER = 'http://localhost:4000';
+const CARRIERS=[
+  {id:'fedex',name:'FedEx',abbr:'FX',bg:'#eff4ff',color:'#1a56db',bc:'#c7d7fd'},
+  {id:'xpo',name:'XPO Logistics',abbr:'XPO',bg:'#fdf2f2',color:'#c81e1e',bc:'#fbd5d5'},
+  {id:'dayross',name:'Day & Ross',abbr:'D&R',bg:'#eff4ff',color:'#1e429f',bc:'#c7d7fd'},
+  {id:'manitoulin',name:'Manitoulin',abbr:'MAN',bg:'#edfaf4',color:'#057a55',bc:'#a7f3d0'},
+  {id:'polaris',name:'Polaris',abbr:'POL',bg:'#f5f3ff',color:'#5521b5',bc:'#ddd6fe'},
+];
+
+const SPOT_TYPES = ['ftl','air','ocean'];
+let currentType = 'envelope';
+let fedexLive = false;
+
+async function checkServer(){try{const r=await fetch(`${SERVER}/health`,{signal:AbortSignal.timeout(3000)});const d=await r.json();fedexLive=d.carriers?.fedex===true;}catch{}}
+
+function setType(type){
+  currentType=type;
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.toggle('active',c.dataset.type===type));
+
+  const isSpot=SPOT_TYPES.includes(type);
+  document.getElementById('instantFields').style.display=isSpot?'none':'block';
+  document.getElementById('spotFields').style.display=isSpot?'block':'none';
+  document.getElementById('resultsArea').innerHTML='';
+
+  if(!isSpot){
+    document.getElementById('detailsEnvelope').style.display=type==='envelope'?'grid':'none';
+    document.getElementById('detailsParcel').style.display=type==='parcel'?'block':'none';
+    document.getElementById('detailsLtl').style.display=type==='ltl'?'block':'none';
+  }
+
+  if(isSpot){
+    const labels={ftl:{title:'FTL Freight — Spot rate request',desc:'Full truckload shipments require custom pricing. Fill in your cargo details and our team will respond within 2–4 business hours with a competitive rate.'},air:{title:'Air Freight — Spot rate request',desc:'Import and export air freight pricing is based on routes, weight, and current capacity. Our team will respond with a competitive quote within 2–4 business hours.'},ocean:{title:'Ocean Freight — Spot rate request',desc:'LCL and FCL ocean freight pricing varies by route and market conditions. Fill in your shipment details and we\'ll send you a competitive quote within 2–4 business hours.'}};
+    document.getElementById('spotTitle').textContent=labels[type].title;
+    document.getElementById('spotDesc').textContent=labels[type].desc;
+    document.getElementById('airOceanFields').style.display=(type==='air'||type==='ocean')?'block':'none';
+    document.getElementById('oceanFields').style.display=type==='ocean'?'block':'none';
+  }
+}
+
+function toggleAcc(el){el.classList.toggle('active');el.querySelector('input').checked=el.classList.contains('active');}
+
+function applyMarkup(rate){if(rate<=100)return rate*1.70;if(rate<=250)return rate*1.55;if(rate<=500)return rate*1.40;if(rate<=1000)return rate*1.30;if(rate<=2500)return rate*1.20;return rate*1.15;}
+
+function getFields(){
+  const t=currentType;
+  if(t==='envelope')return{weight:parseFloat(document.getElementById('weightEnv').value)||0,pieces:parseInt(document.getElementById('piecesEnv').value)||1,pickupDate:document.getElementById('pickupEnv').value,currency:document.getElementById('currencyEnv').value,dimL:12,dimW:9,dimH:1,freightClass:'50'};
+  if(t==='parcel')return{weight:parseFloat(document.getElementById('weightParcel').value)||0,pieces:parseInt(document.getElementById('piecesParcel').value)||1,pickupDate:document.getElementById('pickupParcel').value,currency:document.getElementById('currencyParcel').value,dimL:document.getElementById('dimLParcel').value||12,dimW:document.getElementById('dimWParcel').value||12,dimH:document.getElementById('dimHParcel').value||12,freightClass:'70'};
+  return{weight:parseFloat(document.getElementById('weightLtl').value)||0,pieces:parseInt(document.getElementById('piecesLtl').value)||1,pickupDate:document.getElementById('pickupLtl').value,currency:document.getElementById('currencyLtl').value,dimL:document.getElementById('dimLLtl').value||48,dimW:document.getElementById('dimWLtl').value||40,dimH:document.getElementById('dimHLtl').value||48,freightClass:document.getElementById('freightClass').value};
+}
+
+function calcDelivery(days,pickupDate){if(!days)return null;const base=pickupDate?new Date(pickupDate+'T12:00:00'):new Date();const d=new Date(base);let added=0;while(added<parseInt(days)){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)added++;}return d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});}
+
+function simulateRate(carrier,type,weight,cls,orig,dest,accessorials,pickupDate){
+  const seed=(carrier.id+orig+dest+type).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const rng=((seed*9301+49297)%233280)/233280;const rng2=((seed*6271+8831)%233280)/233280;
+  let base;
+  if(type==='envelope')base=18+rng*35;
+  else if(type==='parcel')base=22+rng*55+(weight/10)*(7+rng2*6);
+  else{const m={'50':1,'55':1.05,'60':1.1,'65':1.15,'70':1.2,'77.5':1.3,'85':1.4,'92.5':1.5,'100':1.65,'110':1.8,'125':2,'150':2.3,'175':2.6,'200':3,'250':3.5,'300':4}[String(cls)]||1;base=(55+rng*85)*(weight/100)*m;}
+  accessorials.forEach(a=>{if(a==='liftgate_pickup'||a==='liftgate_delivery')base+=55+rng2*30;if(a==='residential')base+=22+rng2*12;if(a==='appointment')base+=38+rng2*10;if(a==='inside_delivery')base+=75+rng2*20;if(a==='hazmat')base+=145+rng2*55;if(a==='saturday')base+=32+rng2*15;if(a==='signature')base+=7+rng2*4;});
+  const td=type==='envelope'?Math.ceil(1+rng2*2):type==='parcel'?Math.ceil(1+rng2*3):Math.ceil(2+rng2*4);
+  const svcs={envelope:['Express Saver','Priority Overnight','Standard Overnight','Economy Select'],parcel:['Ground','Express Saver','2Day','Priority Overnight'],ltl:['Freight Economy','Freight Priority','Standard LTL']};
+  const svcList=svcs[type]||svcs.ltl;
+  return{rate:Math.max(Math.round((base+(rng-0.5)*8)*100)/100,type==='envelope'?12:type==='parcel'?15:110),transitDays:td,deliveryDate:calcDelivery(td,pickupDate),service:svcList[Math.floor(rng*svcList.length)],live:false};
+}
+
+async function getQuotes(){
+  const origCity=document.getElementById('origCity').value.trim();
+  const origPostal=document.getElementById('origPostal').value.trim().replace(/\s/g,'');
+  const origCountry=document.getElementById('origCountry').value;
+  const destCity=document.getElementById('destCity').value.trim();
+  const destPostal=document.getElementById('destPostal').value.trim().replace(/\s/g,'');
+  const destCountry=document.getElementById('destCountry').value;
+  const accessorials=[...document.querySelectorAll('.acc-item input:checked')].map(i=>i.value);
+  const{weight,pieces,pickupDate,currency,dimL,dimW,dimH,freightClass}=getFields();
+
+  if(!origCity&&!origPostal){alert('Please enter an origin.');return;}
+  if(!destCity&&!destPostal){alert('Please enter a destination.');return;}
+  if(!weight){alert('Please enter the weight.');return;}
+  if(currentType==='ltl'&&!freightClass){alert('Please select a freight class.');return;}
+
+  const btn=document.getElementById('getQuotesBtn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Fetching…';
+  document.getElementById('resultsArea').innerHTML='<div class="loading-row"><div class="loading-spinner"></div> Querying all carriers…</div>';
+
+  await new Promise(r=>setTimeout(r,900));
+
+  const results=await Promise.all(CARRIERS.map(async c=>{
+    if(c.id==='fedex'&&fedexLive){
+      try{const body={origPostal:origPostal||origCity,origCountry,destPostal:destPostal||destCity,destCountry,weight,freightClass:freightClass||'70',pieces,dimL,dimW,dimH,currency};if(pickupDate)body.pickupDate=pickupDate;const res=await fetch(`${SERVER}/api/rate/fedex`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});const data=await res.json();if(data.rates&&data.rates.length){const best=data.rates[0];return{carrier:c,rate:best.rate,transitDays:best.transitDays,deliveryDate:best.deliveryDate||calcDelivery(best.transitDays,pickupDate),service:best.serviceName,live:true};}}catch(e){}
+    }
+    return{carrier:c,...simulateRate(c,currentType,weight,freightClass,origPostal||origCity,destPostal||destCity,accessorials,pickupDate)};
+  }));
+
+  const sorted=results.map(r=>({...r,displayRate:Math.round(applyMarkup(r.rate)*100)/100})).sort((a,b)=>a.displayRate-b.displayRate);
+  const cheapest=sorted[0]?.displayRate||0;
+  const typeLabel={envelope:'Envelope',parcel:'Parcel',ltl:'LTL Freight'}[currentType];
+
+  let html=`<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px">${sorted.length} quotes · ${origCity||origPostal} → ${destCity||destPostal} · ${typeLabel} · ${weight} lbs · ${currency}</div>`;
+  sorted.forEach((r,i)=>{
+    const isBest=i===0;const savings=i>0?(r.displayRate-cheapest).toFixed(2):0;
+    const sym=currency==='CAD'?'C$':'$';const transitStr=r.transitDays?`${r.transitDays}–${parseInt(r.transitDays)+1} business days`:'—';
+    html+=`<div class="result-card${isBest?' best':''}">
+      ${isBest?'<div class="best-flag">★ BEST RATE</div>':''}
+      <div class="carrier-badge" style="background:${r.carrier.bg};color:${r.carrier.color};border:1.5px solid ${r.carrier.bc}">${r.carrier.abbr}</div>
+      <div class="ri"><div class="ri-name">${r.carrier.name}<span class="${r.live?'live-tag':'sim-tag'}">${r.live?'● live':'~ est.'}</span></div><div class="ri-svc">${r.service||typeLabel}</div><div class="ri-meta"><span class="ri-chip">⏱ ${transitStr}</span>${r.deliveryDate?`<span class="ri-chip delivery">📅 Est. ${r.deliveryDate}</span>`:''}</div></div>
+      <div class="rr"><div class="rr-amount">${sym}${r.displayRate.toFixed(2)}</div><div class="rr-cur">${currency}</div>${isBest?'':`<div class="rr-savings">+$${savings} vs best</div>`}<button class="btn-book">Book this rate →</button></div>
+    </div>`;
+  });
+  document.getElementById('resultsArea').innerHTML=html;
+  document.getElementById('resultsArea').scrollIntoView({behavior:'smooth',block:'start'});
+  btn.disabled=false;btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Get quotes from all carriers';
+}
+
+function submitSpotRate(){
+  const orig=document.getElementById('origCity').value||document.getElementById('origPostal').value;
+  const dest=document.getElementById('destCity').value||document.getElementById('destPostal').value;
+  if(!orig||!dest){alert('Please enter an origin and destination.');return;}
+  document.getElementById('spotSuccessBox').classList.add('show');
+  document.getElementById('spotSuccessBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+const today=new Date().toISOString().split('T')[0];
+['pickupEnv','pickupParcel','pickupLtl','spotDate'].forEach(id=>document.getElementById(id).value=today);
+setType('envelope');
+checkServer();
+</script>
+</body>
+</html>

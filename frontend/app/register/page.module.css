@@ -1,0 +1,341 @@
+.wrapper {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.left {
+  background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.leftLogo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.leftLogo img {
+  height: 44px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+.backHome {
+  font-family: var(--display);
+  font-size: 12px;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .15s;
+}
+
+.backHome:hover {
+  color: var(--white);
+}
+
+.leftContent {
+  position: relative;
+  z-index: 1;
+}
+
+.leftContent h2 {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  margin-bottom: 12px;
+}
+
+.leftContent h2 span {
+  color: var(--accent);
+}
+
+.leftContent p {
+  font-size: 14px;
+  color: rgba(255,255,255,.6);
+  line-height: 1.7;
+  max-width: 340px;
+}
+
+.tierCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.tierCard {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.tierCard h4 {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+
+.tierCard p {
+  font-size: 12px;
+  color: rgba(255,255,255,.45);
+}
+
+.leftBottom {
+  font-size: 12px;
+  color: rgba(255,255,255,.3);
+  position: relative;
+  z-index: 1;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  overflow-y: auto;
+}
+
+.authBox {
+  width: 100%;
+  max-width: 460px;
+}
+
+.authBox h1 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 4px;
+  letter-spacing: -.02em;
+}
+
+.authBox > p {
+  font-size: 14px;
+  color: var(--text3);
+  margin-bottom: 28px;
+}
+
+.stepIndicator {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stepNum {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--border);
+  color: var(--text3);
+  transition: all .2s;
+}
+
+.stepActive .stepNum {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.stepDone .stepNum {
+  background: var(--green);
+  color: var(--white);
+}
+
+.stepLabel {
+  color: var(--text3);
+}
+
+.stepActive .stepLabel {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.stepDivider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.btnAuth {
+  width: 100%;
+  height: 48px;
+  background: var(--navy);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btnAuth:hover {
+  background: var(--navy-dark);
+  transform: translateY(-1px);
+}
+
+.btnAuth:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnBack {
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 10px;
+}
+
+.btnBack:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.authSwitch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 20px;
+}
+
+.authSwitch a {
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.eulaBox {
+  background: var(--off-white);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  max-height: 140px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.eulaBox h4 {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.checkboxRow input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--navy);
+}
+
+.successState {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  background: var(--green-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+}
+
+.successState h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.successState p {
+  font-size: 14px;
+  color: var(--text3);
+  margin-bottom: 28px;
+}
+
+.error {
+  background: var(--red-light);
+  color: var(--red);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .wrapper { grid-template-columns: 1fr; }
+  .left { display: none; }
+}

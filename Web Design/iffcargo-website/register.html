@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Create Account — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--accent:#f0a500;--white:#ffffff;--off-white:#f8f9fc;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--radius:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.left{background:linear-gradient(135deg,var(--navy-dark),var(--navy));display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden}
+.left::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.left-logo{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.left-logo img{height:40px;filter:brightness(0) invert(1)}
+.left-content{position:relative;z-index:1}
+.left-content h2{font-family:var(--display);font-size:32px;font-weight:800;color:var(--white);line-height:1.15;letter-spacing:-.02em;margin-bottom:12px}
+.left-content h2 span{color:var(--accent)}
+.left-content p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.7;max-width:340px}
+.tier-cards{display:flex;flex-direction:column;gap:10px;margin-top:28px;position:relative;z-index:1}
+.tier-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px}
+.tier-card h4{font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px}
+.tier-card p{font-size:12px;color:rgba(255,255,255,.45)}
+.left-bottom{font-size:12px;color:rgba(255,255,255,.3);position:relative;z-index:1}
+.right{display:flex;align-items:center;justify-content:center;padding:48px;overflow-y:auto}
+.auth-box{width:100%;max-width:460px}
+.auth-box h1{font-family:var(--display);font-size:26px;font-weight:800;color:var(--navy);margin-bottom:4px;letter-spacing:-.02em}
+.auth-box p{font-size:14px;color:var(--text3);margin-bottom:28px}
+.step-indicator{display:flex;gap:8px;align-items:center;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:6px;font-family:var(--display);font-size:12px;font-weight:600}
+.step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--border);color:var(--text3);transition:all .2s}
+.step.active .step-num{background:var(--navy);color:var(--white)}
+.step.done .step-num{background:var(--green);color:var(--white)}
+.step-label{color:var(--text3)}
+.step.active .step-label{color:var(--navy);font-weight:700}
+.step-divider{flex:1;height:1px;background:var(--border)}
+.form-step{display:none}
+.form-step.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;font-family:var(--display)}
+.field input,.field select{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--body);font-size:14px;color:var(--text);background:var(--white);transition:border-color .15s;appearance:none}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,58,92,.08)}
+.eula-box{background:var(--off-white);border:1.5px solid var(--border);border-radius:10px;padding:16px;max-height:140px;overflow-y:auto;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:14px}
+.eula-box h4{font-family:var(--display);font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.checkbox-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;font-size:13px;color:var(--text2)}
+.checkbox-row input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)}
+.btn-auth{width:100%;height:48px;background:var(--navy);border:none;border-radius:var(--radius);font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);cursor:pointer;transition:all .2s}
+.btn-auth:hover{background:var(--navy-dark);transform:translateY(-1px)}
+.btn-back{width:100%;height:44px;background:transparent;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--display);font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .2s;margin-bottom:10px}
+.btn-back:hover{border-color:var(--navy);color:var(--navy)}
+.auth-switch{text-align:center;font-size:13px;color:var(--text3);margin-top:20px}
+.auth-switch a{color:var(--navy);font-weight:600;text-decoration:none}
+.success-state{text-align:center;padding:20px 0}
+.success-icon{width:64px;height:64px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+@media(max-width:768px){body{grid-template-columns:1fr}.left{display:none}}
+</style>
+</head>
+<body>
+<div class="left">
+  <div class="left-logo">
+  <img src="logo-white.svg" alt="IFF" style="height:44px;width:auto"/>
+  <a href="index.html" style="font-family:var(--display);font-size:12px;color:rgba(255,255,255,.45);text-decoration:none;display:flex;align-items:center;gap:4px">← Back to website</a>
+</div>
+  <div class="left-content">
+    <h2>Start shipping smarter with <span>IFF</span></h2>
+    <p>Free account. No monthly fees. Pay only for the shipments you book.</p>
+    <div class="tier-cards">
+      <div class="tier-card">
+        <h4>Standard account — Free</h4>
+        <p>Instant quotes, online booking, label printing, shipment tracking</p>
+      </div>
+      <div class="tier-card">
+        <h4>Volume discounts</h4>
+        <p>Ship regularly? Contact us for custom pricing and dedicated support</p>
+      </div>
+      <div class="tier-card">
+        <h4>All carriers included</h4>
+        <p>FedEx, XPO, Day & Ross, Manitoulin, Polaris and more</p>
+      </div>
+    </div>
+  </div>
+  <div class="left-bottom">© 2026 IFF. Trusted since 1993.</div>
+</div>
+<div class="right">
+  <div class="auth-box">
+    <h1>Create your account</h1>
+    <p>Free to join · No credit card required to get quotes</p>
+
+    <div class="step-indicator">
+      <div class="step active" id="step1ind"><div class="step-num">1</div><span class="step-label">Your info</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step2ind"><div class="step-num">2</div><span class="step-label">Company</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step3ind"><div class="step-num">3</div><span class="step-label">Agreement</span></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="form-step active" id="step1">
+      <div class="grid2">
+        <div class="field"><label>First name</label><input id="fname" placeholder="John"/></div>
+        <div class="field"><label>Last name</label><input id="lname" placeholder="Smith"/></div>
+      </div>
+      <div class="field"><label>Email address</label><input type="email" id="email" placeholder="john@company.com"/></div>
+      <div class="field"><label>Phone number</label><input type="tel" id="phone" placeholder="416 555 0100"/></div>
+      <div class="field"><label>Password</label><input type="password" id="password" placeholder="Min. 8 characters"/></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="password2" placeholder="Repeat password"/></div>
+      <button class="btn-auth" onclick="goStep(2)">Continue →</button>
+      <div class="auth-switch">Already have an account? <a href="login.html">Sign in</a></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="form-step" id="step2">
+      <div class="field"><label>Company name</label><input id="company" placeholder="Acme Corp"/></div>
+      <div class="grid2">
+        <div class="field"><label>Country</label>
+          <select id="country">
+            <option value="CA">Canada</option>
+            <option value="US">United States</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Province / State</label><input id="province" placeholder="Ontario"/></div>
+      </div>
+      <div class="field"><label>City</label><input id="city" placeholder="Toronto"/></div>
+      <div class="field"><label>Postal / ZIP code</label><input id="postal" placeholder="M5V 3A8"/></div>
+      <div class="field"><label>Primary shipping type</label>
+        <select id="shiptype">
+          <option>Courier / Small packages</option>
+          <option>LTL Freight</option>
+          <option>FTL Trucking</option>
+          <option>Mixed / Multiple types</option>
+        </select>
+      </div>
+      <button class="btn-back" onclick="goStep(1)">← Back</button>
+      <button class="btn-auth" onclick="goStep(3)">Continue →</button>
+    </div>
+
+    <!-- Step 3 — EULA -->
+    <div class="form-step" id="step3">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">Please review and accept the following agreements to complete your registration.</div>
+      <div class="eula-box">
+        <h4>IFF Terms of Use</h4>
+        <p>By creating an account with IFF, you agree to our terms of service. Rates displayed are estimates based on information provided and may vary based on actual shipment characteristics. IFF acts as a freight broker and is not liable for carrier delays, loss, or damage beyond the limits set out in our insurance and liability policy. You agree to provide accurate shipment information and comply with all applicable shipping regulations including those governing dangerous goods, restricted items, and customs requirements.</p>
+        <br/>
+        <h4>FedEx Terms — End User License Agreement</h4>
+        <p>Access to FedEx shipping services through IFF Cargo is subject to FedEx's terms and conditions. By using FedEx services through this platform, you acknowledge that FedEx rates, services, and service areas are subject to change. All FedEx shipments are governed by FedEx's standard terms and conditions available at fedex.com. You agree not to ship prohibited items as defined by FedEx and all applicable laws and regulations.</p>
+        <br/>
+        <h4>Privacy Policy</h4>
+        <p>IFF collects and uses your personal and company information to process shipments, provide quotes, and improve our services. We do not sell your information to third parties. Shipment data is shared with carriers only as necessary to complete your bookings. By registering, you consent to receiving transactional emails related to your shipments and account.</p>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agreeTerms"/>
+        <label for="agreeTerms">I have read and agree to the IFF Cargo <strong>Terms of Use</strong> and <strong>Privacy Policy</strong></label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agreeFedex"/>
+        <label for="agreeFedex">I acknowledge and accept the <strong>FedEx End User License Agreement</strong> and agree to comply with all applicable shipping regulations</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agreeAge"/>
+        <label for="agreeAge">I confirm I am 18 years of age or older and authorized to create this account on behalf of my company</label>
+      </div>
+      <button class="btn-back" onclick="goStep(2)">← Back</button>
+      <button class="btn-auth" onclick="completeRegistration()" style="margin-top:4px">Create my account</button>
+    </div>
+
+    <!-- Success -->
+    <div class="form-step" id="stepSuccess">
+      <div class="success-state">
+        <div class="success-icon">✓</div>
+        <h2 style="font-family:var(--display);font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px">Account created!</h2>
+        <p style="font-size:14px;color:var(--text3);margin-bottom:28px">Welcome to IFF Cargo. You can now get instant quotes and book shipments online.</p>
+        <button class="btn-auth" onclick="window.location.href='portal.html'">Go to my dashboard →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+function goStep(n) {
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  ['step1ind','step2ind','step3ind'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i+1 < n) el.classList.add('done');
+    else if (i+1 === n) el.classList.add('active');
+  });
+}
+function completeRegistration() {
+  const terms = document.getElementById('agreeTerms').checked;
+  const fedex = document.getElementById('agreeFedex').checked;
+  const age = document.getElementById('agreeAge').checked;
+  if (!terms || !fedex || !age) { alert('Please accept all agreements to continue.'); return; }
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('stepSuccess').classList.add('active');
+}
+</script>
+</body>
+</html>

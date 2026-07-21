@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Track Shipment — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--accent:#f0a500;--white:#fff;--off-white:#f8f9fc;--sky:#e8f4fd;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--amber:#b45309;--amber-light:#fffbeb;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--shadow:0 1px 4px rgba(27,58,92,.06);--radius:12px;--radius-lg:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--navy-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo img{height:36px;width:auto;display:block}
+.sb-user{padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;margin-bottom:8px}
+.sb-name{font-family:var(--display);font-size:13px;font-weight:600;color:#fff}
+.sb-email{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.sb-item svg{color:rgba(255,255,255,.4);flex-shrink:0}
+.sb-item span{font-family:var(--display);font-size:13px;font-weight:500;color:rgba(255,255,255,.55)}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item:hover svg,.sb-item:hover span{color:#fff}
+.sb-item.active{background:rgba(255,255,255,.1)}
+.sb-item.active svg,.sb-item.active span{color:#fff;font-weight:700}
+.sb-section{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 12px 4px;margin-top:8px}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.main{overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;box-shadow:var(--shadow)}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.page-content{padding:32px;max-width:860px}
+.section-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+.search-row{display:flex;gap:10px;margin-bottom:0}
+.track-input{flex:1;height:48px;padding:0 18px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--body);font-size:15px;color:var(--text);background:#fff;transition:border-color .15s}
+.track-input:focus{outline:none;border-color:var(--navy)}
+.btn-track{height:48px;padding:0 28px;background:var(--navy);border:none;border-radius:var(--radius);font-family:var(--display);font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-track:hover{background:var(--navy-dark)}
+.track-result{display:none}
+.track-result.show{display:block}
+.result-header{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;margin-bottom:24px}
+.tracking-num{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px}
+.carrier-line{font-size:13px;color:var(--text2)}
+.route-line{font-size:13px;color:var(--text3);margin-top:2px}
+.status-big{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;font-family:var(--display);font-size:14px;font-weight:700}
+.status-big.transit{background:var(--sky);color:var(--navy)}
+.status-big.delivered{background:var(--green-light);color:var(--green)}
+.status-big.pending{background:var(--amber-light);color:var(--amber)}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;padding:20px;background:var(--off-white);border-radius:var(--radius);border:1px solid var(--border)}
+.info-item label{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:4px}
+.info-item span{font-size:13px;font-weight:600;color:var(--text)}
+.timeline-title{font-family:var(--display);font-size:14px;font-weight:700;color:var(--navy);margin-bottom:16px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.timeline-item{display:flex;gap:16px;position:relative}
+.timeline-item::before{content:'';position:absolute;left:11px;top:26px;bottom:-4px;width:2px;background:var(--border)}
+.timeline-item:last-child::before{display:none}
+.tl-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:#fff;flex-shrink:0;margin-top:4px;display:flex;align-items:center;justify-content:center;z-index:1}
+.tl-dot.done{background:var(--green);border-color:var(--green)}
+.tl-dot.active{background:var(--navy);border-color:var(--navy)}
+.tl-dot svg{display:none}
+.tl-dot.done svg,.tl-dot.active svg{display:block}
+.tl-content{padding-bottom:20px;flex:1}
+.tl-event{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.tl-location{font-size:12px;color:var(--text2)}
+.tl-time{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.empty-track{text-align:center;padding:40px;color:var(--text3)}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo"><a href="index.html"><img src="logo-white.svg" alt="IFF"/></a></div>
+  <div class="sb-user"><div class="sb-avatar">JS</div><div class="sb-name">John Smith</div><div class="sb-email">john@acmecorp.com</div></div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item" href="quote.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Get a quote</span></a>
+    <a class="sb-item" href="portal.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="sb-item" href="shipments.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>My shipments</span></a>
+    <a class="sb-item active" href="track.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Track shipment</span></a>
+    <a class="sb-item" href="claims.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>Claims</span></a>
+    <div class="sb-section">Account</div>
+    <a class="sb-item" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+    <a class="sb-item" href="billing.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Billing</span></a>
+    <a class="sb-item" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Back to website</span></a>
+  </nav>
+  <div class="sb-bottom"><a class="sb-item" href="login.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign out</span></a></div>
+</aside>
+
+<div class="main">
+  <div class="topbar"><div class="topbar-title">Track shipment</div></div>
+  <div class="page-content">
+    <div class="section-card">
+      <div style="font-family:var(--display);font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px">Enter your tracking number</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:16px">Enter a FedEx, XPO, Day & Ross, Manitoulin, or Polaris tracking number</div>
+      <div class="search-row">
+        <input class="track-input" id="trackInput" placeholder="e.g. 1Z999AA1234567890" value=""/>
+        <button class="btn-track" onclick="doTrack()">Track →</button>
+      </div>
+    </div>
+
+    <div class="track-result" id="trackResult">
+      <div class="section-card">
+        <div class="result-header">
+          <div>
+            <div class="tracking-num" id="tr-num"></div>
+            <div class="carrier-line" id="tr-carrier"></div>
+            <div class="route-line" id="tr-route"></div>
+          </div>
+          <div class="status-big transit" id="tr-status"></div>
+        </div>
+        <div class="info-grid">
+          <div class="info-item"><label>Est. delivery</label><span id="tr-delivery"></span></div>
+          <div class="info-item"><label>Service</label><span id="tr-service"></span></div>
+          <div class="info-item"><label>Weight</label><span id="tr-weight"></span></div>
+          <div class="info-item"><label>Pieces</label><span id="tr-pieces"></span></div>
+        </div>
+        <div class="timeline-title">Tracking history</div>
+        <div class="timeline" id="tr-timeline"></div>
+      </div>
+    </div>
+
+    <div class="section-card" id="emptyTrack" style="display:none">
+      <div class="empty-track">
+        <p style="font-weight:600;color:var(--text2);margin-bottom:4px">No tracking information found</p>
+        <p style="font-size:12px">Check the tracking number and try again, or <a href="mailto:info@iffcargo.com" style="color:var(--navy)">contact us</a> for help.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const mockShipments = {
+  '1Z999AA1234567890': {carrier:'FedEx Freight',route:'Toronto, ON → Chicago, IL',delivery:'May 24, 2026',service:'Freight Economy',weight:'500 lbs',pieces:'2 pallets',status:'delivered',events:[
+    {event:'Delivered',location:'Chicago, IL',time:'May 24, 2026 · 10:42 AM',done:true,active:false},
+    {event:'Out for delivery',location:'Chicago, IL',time:'May 24, 2026 · 7:15 AM',done:true,active:false},
+    {event:'Arrived at destination facility',location:'Chicago, IL',time:'May 23, 2026 · 11:30 PM',done:true,active:false},
+    {event:'In transit',location:'Indianapolis, IN',time:'May 23, 2026 · 3:20 PM',done:true,active:false},
+    {event:'Departed origin facility',location:'Toronto, ON',time:'May 20, 2026 · 6:00 PM',done:true,active:false},
+    {event:'Picked up',location:'Toronto, ON',time:'May 20, 2026 · 2:30 PM',done:true,active:false},
+  ]},
+  '1Z888BB9876543210': {carrier:'Day & Ross',route:'Mississauga, ON → Detroit, MI',delivery:'May 26, 2026',service:'Freight Priority',weight:'180 lbs',pieces:'3 boxes',status:'transit',events:[
+    {event:'Delivered',location:'Detroit, MI',time:'Estimated May 26, 2026',done:false,active:false},
+    {event:'In transit',location:'Windsor, ON',time:'May 25, 2026 · 4:45 AM',done:false,active:true},
+    {event:'Departed origin facility',location:'Mississauga, ON',time:'May 22, 2026 · 8:00 PM',done:true,active:false},
+    {event:'Picked up',location:'Mississauga, ON',time:'May 22, 2026 · 3:15 PM',done:true,active:false},
+  ]},
+  'MAN-2026-00481': {carrier:'Manitoulin Transport',route:'Toronto, ON → Montreal, QC',delivery:'May 27, 2026',service:'Standard LTL',weight:'240 lbs',pieces:'2 boxes',status:'transit',events:[
+    {event:'Delivered',location:'Montreal, QC',time:'Estimated May 27, 2026',done:false,active:false},
+    {event:'In transit',location:'Kingston, ON',time:'May 25, 2026 · 9:10 AM',done:false,active:true},
+    {event:'Picked up',location:'Toronto, ON',time:'May 23, 2026 · 11:00 AM',done:true,active:false},
+  ]},
+  'POL-2026-00192': {carrier:'Polaris Transport',route:'Brampton, ON → Ottawa, ON',delivery:'May 27, 2026',service:'Ground',weight:'45 lbs',pieces:'1 box',status:'pending',events:[
+    {event:'Delivered',location:'Ottawa, ON',time:'Estimated May 27, 2026',done:false,active:false},
+    {event:'Awaiting pickup',location:'Brampton, ON',time:'May 25, 2026',done:false,active:true},
+  ]},
+};
+
+function doTrack() {
+  const val = document.getElementById('trackInput').value.trim();
+  const data = mockShipments[val];
+  document.getElementById('trackResult').classList.remove('show');
+  document.getElementById('emptyTrack').style.display = 'none';
+  if (!val) return;
+  if (!data) { document.getElementById('emptyTrack').style.display = 'block'; return; }
+
+  document.getElementById('tr-num').textContent = val;
+  document.getElementById('tr-carrier').textContent = data.carrier;
+  document.getElementById('tr-route').textContent = data.route;
+  document.getElementById('tr-delivery').textContent = data.delivery;
+  document.getElementById('tr-service').textContent = data.service;
+  document.getElementById('tr-weight').textContent = data.weight;
+  document.getElementById('tr-pieces').textContent = data.pieces;
+
+  const statusEl = document.getElementById('tr-status');
+  statusEl.className = 'status-big ' + data.status;
+  statusEl.textContent = data.status === 'delivered' ? '✓ Delivered' : data.status === 'transit' ? '↦ In transit' : '○ Pending pickup';
+
+  const tl = document.getElementById('tr-timeline');
+  tl.innerHTML = data.events.map(e => `
+    <div class="timeline-item">
+      <div class="tl-dot ${e.done?'done':e.active?'active':''}">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="tl-content">
+        <div class="tl-event">${e.event}</div>
+        <div class="tl-location">${e.location}</div>
+        <div class="tl-time">${e.time}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('trackResult').classList.add('show');
+}
+
+// Pre-fill from URL param
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
+if (id) { document.getElementById('trackInput').value = id; doTrack(); }
+</script>
+</body>
+</html>

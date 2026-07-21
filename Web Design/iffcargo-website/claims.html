@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Claims — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--accent:#f0a500;--white:#fff;--off-white:#f8f9fc;--sky:#e8f4fd;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#c81e1e;--red-light:#fdf2f2;--red-border:#fbd5d5;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--shadow:0 1px 4px rgba(27,58,92,.06);--shadow-md:0 4px 20px rgba(27,58,92,.1);--radius:12px;--radius-lg:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--navy-dark);display:flex;flex-direction:column;padding:0;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo a{display:block}
+.sb-logo img{height:36px;width:auto;display:block}
+.sb-user{padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:700;color:var(--white);margin-bottom:8px}
+.sb-name{font-family:var(--display);font-size:13px;font-weight:600;color:var(--white)}
+.sb-email{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.sb-item svg{color:rgba(255,255,255,.4);flex-shrink:0;transition:color .15s}
+.sb-item span{font-family:var(--display);font-size:13px;font-weight:500;color:rgba(255,255,255,.55);transition:color .15s}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item:hover svg,.sb-item:hover span{color:var(--white)}
+.sb-item.active{background:rgba(255,255,255,.1)}
+.sb-item.active svg,.sb-item.active span{color:var(--white);font-weight:700}
+.sb-section{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 12px 4px;margin-top:8px}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.main{overflow-y:auto}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.btn-new{height:36px;padding:0 16px;background:var(--navy);border:none;border-radius:8px;font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-new:hover{background:var(--navy-dark)}
+.page-content{padding:32px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab-btn{padding:10px 20px;font-family:var(--display);font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.section-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);margin-bottom:24px}
+.sc-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.sc-sub{font-size:13px;color:var(--text3);margin-bottom:24px}
+.info-box{background:var(--red-light);border:1px solid var(--red-border);border-radius:var(--radius);padding:14px 18px;font-size:13px;color:var(--red);display:flex;gap:10px;align-items:flex-start;margin-bottom:24px;line-height:1.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-family:var(--display)}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:14px;color:var(--text);background:var(--white);transition:border-color .15s;appearance:none;resize:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,58,92,.07)}
+.field input[type=date]{height:42px}
+.field input[type=number]{height:42px}
+.field select{height:42px}
+.upload-box{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:14px}
+.upload-box:hover{border-color:var(--navy);background:var(--sky)}
+.upload-box p{font-size:13px;color:var(--text3);margin-top:6px}
+.upload-box strong{font-family:var(--display);font-size:13px;color:var(--navy)}
+.btn-submit{height:48px;padding:0 32px;background:var(--navy);border:none;border-radius:var(--radius);font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.btn-submit:hover{background:var(--navy-dark)}
+.success-box{background:var(--green-light);border:1px solid #a7f3d0;border-radius:var(--radius);padding:20px 24px;font-size:14px;color:var(--green);display:none;align-items:center;gap:12px;margin-top:16px;line-height:1.6}
+.success-box.show{display:flex}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+td:first-child{font-weight:600;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--off-white)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--display)}
+.badge-open{background:var(--amber-light);color:var(--amber)}
+.badge-review{background:var(--sky);color:var(--navy)}
+.badge-approved{background:var(--green-light);color:var(--green)}
+.badge-closed{background:var(--off-white);color:var(--text3)}
+.claim-detail-row{cursor:pointer}
+.empty-state{text-align:center;padding:40px;color:var(--text3)}
+.empty-icon{width:48px;height:48px;background:var(--off-white);border:1.5px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo"><a href="index.html"><img src="logo-white.svg" alt="IFF"/></a></div>
+  <div class="sb-user">
+    <div class="sb-avatar">JS</div>
+    <div class="sb-name">John Smith</div>
+    <div class="sb-email">john@acmecorp.com</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item" href="quote.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Get a quote</span></a>
+    <a class="sb-item" href="portal.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="sb-item" href="shipments.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>My shipments</span></a>
+    <a class="sb-item" href="track.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Track shipment</span></a>
+    <a class="sb-item active" href="claims.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>Claims</span></a>
+    <div class="sb-section">Account</div>
+    <a class="sb-item" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+    <a class="sb-item" href="billing.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Billing</span></a>
+    <a class="sb-item" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Back to website</span></a>
+  </nav>
+  <div class="sb-bottom">
+    <a class="sb-item" href="login.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign out</span></a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Claims</div>
+    <button class="btn-new" onclick="showTab('new')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New claim
+    </button>
+  </div>
+  <div class="page-content">
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('history')">Claim history</button>
+      <button class="tab-btn" id="newTabBtn" onclick="showTab('new')">Submit new claim</button>
+    </div>
+
+    <!-- History -->
+    <div class="tab-panel active" id="panel-history">
+      <div class="section-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Claim #</th>
+                <th>Tracking #</th>
+                <th>Carrier</th>
+                <th>Claim type</th>
+                <th>Amount claimed</th>
+                <th>Submitted</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="claim-detail-row">
+                <td>CLM-2026-0012</td>
+                <td>1Z999AA1234567890</td>
+                <td>FedEx Freight</td>
+                <td>Damaged goods</td>
+                <td>C$1,240.00</td>
+                <td>May 22, 2026</td>
+                <td><span class="badge badge-review">↻ Under review</span></td>
+              </tr>
+              <tr class="claim-detail-row">
+                <td>CLM-2026-0009</td>
+                <td>7489234572834</td>
+                <td>XPO Logistics</td>
+                <td>Lost shipment</td>
+                <td>C$3,800.00</td>
+                <td>May 10, 2026</td>
+                <td><span class="badge badge-approved">● Approved</span></td>
+              </tr>
+              <tr class="claim-detail-row">
+                <td>CLM-2026-0007</td>
+                <td>MAN-2026-00241</td>
+                <td>Manitoulin</td>
+                <td>Shortage</td>
+                <td>C$620.00</td>
+                <td>Apr 28, 2026</td>
+                <td><span class="badge badge-approved">● Approved</span></td>
+              </tr>
+              <tr class="claim-detail-row">
+                <td>CLM-2025-0094</td>
+                <td>POL-2025-00812</td>
+                <td>Polaris</td>
+                <td>Damaged goods</td>
+                <td>C$450.00</td>
+                <td>Dec 14, 2025</td>
+                <td><span class="badge badge-closed">Closed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-card" style="background:var(--sky);border-color:var(--border)">
+        <div style="font-family:var(--display);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px">Need help with a claim?</div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">Our claims team is available Monday to Friday, 9am–5pm. For urgent matters, call us at <strong>416 798 4151</strong> or email <a href="mailto:info@iffcargo.com" style="color:var(--navy)">info@iffcargo.com</a>.</p>
+      </div>
+    </div>
+
+    <!-- New claim -->
+    <div class="tab-panel" id="panel-new">
+      <div class="info-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Claims must be submitted within <strong>9 months</strong> of shipment date. Please have your tracking number, photos of damage, and any relevant invoices ready before submitting. Our team will respond within 3–5 business days.</span>
+      </div>
+
+      <div class="section-card">
+        <div class="sc-title">Submit a claim</div>
+        <div class="sc-sub">For lost, damaged, or short-shipped cargo. All fields marked are required.</div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Tracking / PRO number *</label>
+            <input id="trackingNum" placeholder="e.g. 1Z999AA1234567890"/>
+          </div>
+          <div class="field">
+            <label>Carrier *</label>
+            <select id="carrier">
+              <option value="">— Select carrier —</option>
+              <option>FedEx Freight</option>
+              <option>XPO Logistics</option>
+              <option>Day & Ross</option>
+              <option>Manitoulin Transport</option>
+              <option>Polaris Transport</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Claim type *</label>
+            <select id="claimType">
+              <option value="">— Select type —</option>
+              <option>Damaged goods</option>
+              <option>Lost shipment</option>
+              <option>Shortage (partial loss)</option>
+              <option>Delay claim</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Shipment date *</label>
+            <input type="date" id="shipDate"/>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Amount claimed (CAD) *</label>
+            <input type="number" id="claimAmount" placeholder="e.g. 1500.00"/>
+          </div>
+          <div class="field">
+            <label>Currency</label>
+            <select id="claimCurrency">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Commodity / cargo description *</label>
+          <input placeholder="e.g. Electronic components, auto parts"/>
+        </div>
+
+        <div class="field">
+          <label>Description of loss or damage *</label>
+          <textarea rows="4" placeholder="Describe exactly what happened — when damage was discovered, what is missing or damaged, packaging condition, etc."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Supporting documents</label>
+        </div>
+        <div class="upload-box" onclick="this.style.borderColor='var(--navy)'">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8896a8" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          <strong>Click to upload files</strong>
+          <p>Photos of damage, commercial invoice, packing list, BOL — PDF, JPG, PNG accepted</p>
+        </div>
+
+        <div class="field">
+          <label>Additional notes</label>
+          <textarea rows="2" placeholder="Any other information relevant to your claim…"></textarea>
+        </div>
+
+        <button class="btn-submit" onclick="submitClaim()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Submit claim
+        </button>
+
+        <div class="success-box" id="claimSuccessBox">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div>
+            <strong>Claim submitted successfully!</strong> Your claim reference number is <strong>CLM-2026-0013</strong>. Our claims team will review your submission and respond within 3–5 business days. You'll receive a confirmation email at john@acmecorp.com.
+            <br/><br/>
+            <a href="#" onclick="showTab('history');return false;" style="color:var(--green);font-weight:600;text-decoration:underline">View claim history →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  if (tab === 'history') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('panel-history').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('panel-new').classList.add('active');
+  }
+}
+function submitClaim() {
+  const tracking = document.getElementById('trackingNum').value;
+  const carrier = document.getElementById('carrier').value;
+  const type = document.getElementById('claimType').value;
+  const amount = document.getElementById('claimAmount').value;
+  if (!tracking || !carrier || !type || !amount) {
+    alert('Please fill in all required fields before submitting.');
+    return;
+  }
+  document.getElementById('claimSuccessBox').classList.add('show');
+  document.getElementById('claimSuccessBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>

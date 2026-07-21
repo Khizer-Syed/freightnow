@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Shipments — IFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#1b3a5c;--navy-dark:#112540;--accent:#f0a500;--white:#fff;--off-white:#f8f9fc;--sky:#e8f4fd;--text:#1a2332;--text2:#4a5568;--text3:#8896a8;--border:#e2e8f0;--green:#057a55;--green-light:#edfaf4;--amber:#b45309;--amber-light:#fffbeb;--red:#c81e1e;--red-light:#fdf2f2;--display:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;--shadow:0 1px 4px rgba(27,58,92,.06);--shadow-md:0 4px 20px rgba(27,58,92,.1);--radius:12px;--radius-lg:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--off-white);display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--navy-dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo img{height:36px;width:auto;display:block}
+.sb-user{padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;margin-bottom:8px}
+.sb-name{font-family:var(--display);font-size:13px;font-weight:600;color:#fff}
+.sb-email{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .15s;text-decoration:none}
+.sb-item svg{color:rgba(255,255,255,.4);flex-shrink:0}
+.sb-item span{font-family:var(--display);font-size:13px;font-weight:500;color:rgba(255,255,255,.55)}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item:hover svg,.sb-item:hover span{color:#fff}
+.sb-item.active{background:rgba(255,255,255,.1)}
+.sb-item.active svg,.sb-item.active span{color:#fff;font-weight:700}
+.sb-section{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 12px 4px;margin-top:8px}
+.sb-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.main{overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--navy)}
+.page-content{padding:32px}
+.section-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+.filters{display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+.filter-btn{padding:7px 16px;border:1.5px solid var(--border);border-radius:20px;font-family:var(--display);font-size:12px;font-weight:600;color:var(--text3);background:#fff;cursor:pointer;transition:all .15s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--navy);color:var(--navy);background:var(--sky)}
+.search-input{height:36px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--body);font-size:13px;color:var(--text);background:#fff;width:260px}
+.search-input:focus{outline:none;border-color:var(--navy)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:13px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+td:first-child{font-weight:600;color:var(--text);font-family:var(--mono);font-size:12px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--off-white);cursor:pointer}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--display)}
+.badge-delivered{background:var(--green-light);color:var(--green)}
+.badge-transit{background:var(--sky);color:var(--navy)}
+.badge-pending{background:var(--amber-light);color:var(--amber)}
+.badge-exception{background:var(--red-light);color:var(--red)}
+.btn-action{padding:5px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--display);font-size:11px;font-weight:600;color:var(--text2);background:#fff;cursor:pointer;transition:all .15s}
+.btn-action:hover{border-color:var(--navy);color:var(--navy)}
+.shipment-detail{display:none;background:var(--off-white);border-top:1px solid var(--border)}
+.shipment-detail.open{display:table-row}
+.detail-inner{padding:20px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.detail-label{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.detail-value{font-size:13px;font-weight:600;color:var(--text)}
+.detail-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.pagination{display:flex;align-items:center;gap:8px;margin-top:20px;justify-content:flex-end}
+.page-btn{width:32px;height:32px;border:1.5px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:12px;font-weight:600;color:var(--text2);background:#fff;cursor:pointer;transition:all .15s}
+.page-btn:hover,.page-btn.active{border-color:var(--navy);color:var(--navy);background:var(--sky)}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo"><a href="index.html"><img src="logo-white.svg" alt="IFF"/></a></div>
+  <div class="sb-user"><div class="sb-avatar">JS</div><div class="sb-name">John Smith</div><div class="sb-email">john@acmecorp.com</div></div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a class="sb-item" href="quote.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Get a quote</span></a>
+    <a class="sb-item" href="portal.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="sb-item active" href="shipments.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>My shipments</span></a>
+    <a class="sb-item" href="track.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Track shipment</span></a>
+    <a class="sb-item" href="claims.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>Claims</span></a>
+    <div class="sb-section">Account</div>
+    <a class="sb-item" href="profile.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+    <a class="sb-item" href="billing.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Billing</span></a>
+    <a class="sb-item" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Back to website</span></a>
+  </nav>
+  <div class="sb-bottom"><a class="sb-item" href="login.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign out</span></a></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">My shipments</div>
+    <a href="quote.html" style="height:36px;padding:0 16px;background:var(--navy);border:none;border-radius:8px;font-family:var(--display);font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px;text-decoration:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New shipment
+    </a>
+  </div>
+  <div class="page-content">
+    <div class="section-card">
+      <div class="filters">
+        <input class="search-input" placeholder="Search by tracking #, carrier, route…" oninput="filterShipments(this.value)"/>
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('transit',this)">In transit</button>
+        <button class="filter-btn" onclick="setFilter('delivered',this)">Delivered</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+      </div>
+      <div class="table-wrap">
+        <table id="shipmentsTable">
+          <thead><tr><th>Tracking #</th><th>Route</th><th>Carrier</th><th>Type</th><th>Weight</th><th>Booked</th><th>Est. delivery</th><th>Cost</th><th>Status</th><th></th></tr></thead>
+          <tbody id="shipmentsBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-btn active">1</div>
+        <div class="page-btn">2</div>
+        <div class="page-btn">3</div>
+        <div class="page-btn">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const shipments = [
+  {id:'1Z999AA1234567890',route:'Toronto, ON → Chicago, IL',carrier:'FedEx Freight',type:'LTL Freight',weight:'500 lbs',booked:'May 20, 2026',delivery:'May 24, 2026',cost:'C$312.40',status:'delivered',origin:'Toronto, ON',dest:'Chicago, IL',pieces:'2 pallets',service:'Freight Economy',tracking:'1Z999AA1234567890'},
+  {id:'7489234572834',route:'Toronto, ON → New York, NY',carrier:'XPO Logistics',type:'LTL Freight',weight:'320 lbs',booked:'May 18, 2026',delivery:'May 21, 2026',cost:'C$228.75',status:'delivered',origin:'Toronto, ON',dest:'New York, NY',pieces:'1 pallet',service:'Standard LTL',tracking:'7489234572834'},
+  {id:'1Z888BB9876543210',route:'Mississauga, ON → Detroit, MI',carrier:'Day & Ross',type:'LTL Freight',weight:'180 lbs',booked:'May 22, 2026',delivery:'May 26, 2026',cost:'C$185.60',status:'transit',origin:'Mississauga, ON',dest:'Detroit, MI',pieces:'3 boxes',service:'Freight Priority',tracking:'1Z888BB9876543210'},
+  {id:'MAN-2026-00481',route:'Toronto, ON → Montreal, QC',carrier:'Manitoulin',type:'LTL Freight',weight:'240 lbs',booked:'May 23, 2026',delivery:'May 27, 2026',cost:'C$142.30',status:'transit',origin:'Toronto, ON',dest:'Montreal, QC',pieces:'2 boxes',service:'Standard LTL',tracking:'MAN-2026-00481'},
+  {id:'POL-2026-00192',route:'Brampton, ON → Ottawa, ON',carrier:'Polaris',type:'Parcel',weight:'45 lbs',booked:'May 25, 2026',delivery:'May 27, 2026',cost:'C$98.50',status:'pending',origin:'Brampton, ON',dest:'Ottawa, ON',pieces:'1 box',service:'Ground',tracking:'POL-2026-00192'},
+  {id:'1Z777CC1122334455',route:'Toronto, ON → Los Angeles, CA',carrier:'FedEx Freight',type:'LTL Freight',weight:'780 lbs',booked:'May 15, 2026',delivery:'May 20, 2026',cost:'C$541.20',status:'delivered',origin:'Toronto, ON',dest:'Los Angeles, CA',pieces:'3 pallets',service:'Freight Economy',tracking:'1Z777CC1122334455'},
+  {id:'XPO-2026-88421',route:'Toronto, ON → Dallas, TX',carrier:'XPO Logistics',type:'LTL Freight',weight:'410 lbs',booked:'May 12, 2026',delivery:'May 17, 2026',cost:'C$298.40',status:'delivered',origin:'Toronto, ON',dest:'Dallas, TX',pieces:'2 pallets',service:'Standard LTL',tracking:'XPO-2026-88421'},
+];
+
+const badgeMap={delivered:'<span class="badge badge-delivered">● Delivered</span>',transit:'<span class="badge badge-transit">↦ In transit</span>',pending:'<span class="badge badge-pending">○ Pending pickup</span>',exception:'<span class="badge badge-exception">⚠ Exception</span>'};
+let activeFilter='all';
+
+function renderShipments(data){
+  const tbody=document.getElementById('shipmentsBody');
+  tbody.innerHTML='';
+  data.forEach((s,i)=>{
+    const row=document.createElement('tr');
+    row.className='shipment-row';
+    row.dataset.status=s.status;
+    row.innerHTML=`<td>${s.id}</td><td>${s.route}</td><td>${s.carrier}</td><td>${s.type}</td><td>${s.weight}</td><td>${s.booked}</td><td>${s.delivery}</td><td>${s.cost}</td><td>${badgeMap[s.status]||''}</td><td><button class="btn-action" onclick="toggleDetail(${i})">Details</button></td>`;
+    tbody.appendChild(row);
+    const detailRow=document.createElement('tr');
+    detailRow.className='shipment-detail';
+    detailRow.id='detail-'+i;
+    detailRow.innerHTML=`<td colspan="10"><div class="detail-inner"><div><div class="detail-label">Origin</div><div class="detail-value">${s.origin}</div></div><div><div class="detail-label">Destination</div><div class="detail-value">${s.dest}</div></div><div><div class="detail-label">Pieces</div><div class="detail-value">${s.pieces}</div><div class="detail-sub">${s.weight}</div></div><div><div class="detail-label">Service</div><div class="detail-value">${s.service}</div><div class="detail-sub">${s.carrier}</div></div><div><div class="detail-label">Cost</div><div class="detail-value">${s.cost}</div></div><div><div class="detail-label">Booked</div><div class="detail-value">${s.booked}</div></div><div><div class="detail-label">Est. delivery</div><div class="detail-value">${s.delivery}</div></div><div style="display:flex;gap:8px;align-items:flex-end"><a href="track.html?id=${encodeURIComponent(s.tracking)}" style="padding:8px 14px;background:var(--navy);border-radius:6px;font-family:var(--display);font-size:12px;font-weight:700;color:#fff;text-decoration:none">Track →</a><a href="#" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--display);font-size:12px;font-weight:600;color:var(--text2);text-decoration:none">Download BOL</a></div></div></td>`;
+    tbody.appendChild(detailRow);
+  });
+}
+
+function toggleDetail(i){
+  const el=document.getElementById('detail-'+i);
+  el.classList.toggle('open');
+}
+
+function setFilter(status,btn){
+  activeFilter=status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+
+function filterShipments(q){
+  applyFilter(q);
+}
+
+function applyFilter(q=''){
+  const rows=document.querySelectorAll('.shipment-row');
+  const details=document.querySelectorAll('.shipment-detail');
+  rows.forEach((r,i)=>{
+    const matchStatus=activeFilter==='all'||r.dataset.status===activeFilter;
+    const matchSearch=q===''||r.innerText.toLowerCase().includes(q.toLowerCase());
+    const show=matchStatus&&matchSearch;
+    r.style.display=show?'':'none';
+    details[i].style.display='none';
+    details[i].classList.remove('open');
+  });
+}
+
+renderShipments(shipments);
+</script>
+</body>
+</html>
