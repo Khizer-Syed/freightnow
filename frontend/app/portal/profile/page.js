@@ -1,6 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/lib/api';
+import { FEDEX_DISCLAIMER } from '@/lib/fedexCompliance';
+import FedexConnectModal from '@/components/FedexConnectModal';
+import FedexLogo from '@/components/FedexLogo';
 import s from './page.module.css';
 
 export default function ProfilePage() {
@@ -9,6 +12,8 @@ export default function ProfilePage() {
   const [password, setPassword] = useState({ current: '', newPass: '', confirm: '' });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
+  const [fedexConnections, setFedexConnections] = useState([]);
+  const [showFedexModal, setShowFedexModal] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -21,7 +26,22 @@ export default function ProfilePage() {
       } catch {}
     }
     load();
+    loadFedexConnections();
   }, []);
+
+  async function loadFedexConnections() {
+    try {
+      const data = await fetchAPI('/api/fedex-account');
+      setFedexConnections(data.connections || []);
+    } catch {}
+  }
+
+  async function handleDisconnectFedex(id) {
+    try {
+      await fetchAPI(`/api/fedex-account/${id}`, { method: 'DELETE' });
+      loadFedexConnections();
+    } catch {}
+  }
 
   async function handleSaveProfile(e) {
     e.preventDefault();
@@ -96,6 +116,40 @@ export default function ProfilePage() {
           <button type="submit" className={s.btnSave} disabled={saving}>Save company info</button>
         </form>
       </div>
+
+      <div className="section-card">
+        <div className={s.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FedexLogo height={16} />
+          FedEx Shipping
+        </div>
+        {fedexConnections.length === 0 && (
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 14 }}>
+            FedEx requires all users shipping through FedEx services to review and accept the FedEx End
+            User License Agreement and verify their identity before their first FedEx shipment.
+          </p>
+        )}
+        {fedexConnections.map(conn => (
+          <div key={conn.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>FedEx account ending in {conn.fedexAccountNumber.slice(-4)}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+                {conn.status === 'verified' && 'Active'}
+                {conn.status === 'awaiting_factor2' && 'Verification pending'}
+                {conn.status === 'locked' && 'Locked — too many failed attempts'}
+              </div>
+            </div>
+            <button type="button" className={s.btnDanger} style={{ marginTop: 0 }} onClick={() => handleDisconnectFedex(conn.id)}>Disconnect</button>
+          </div>
+        ))}
+        <button type="button" className={s.btnSave} style={{ marginTop: fedexConnections.length ? 16 : 0 }} onClick={() => setShowFedexModal(true)}>
+          Activate FedEx Shipping
+        </button>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 12 }}>{FEDEX_DISCLAIMER}</div>
+      </div>
+
+      {showFedexModal && (
+        <FedexConnectModal onClose={() => setShowFedexModal(false)} onConnected={loadFedexConnections} />
+      )}
 
       <div className="section-card">
         <div className={s.sectionTitle}>Change Password</div>

@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/lib/api';
 import { CARRIERS } from '@/lib/carriers';
+import { FEDEX_DISCLAIMER } from '@/lib/fedexCompliance';
+import FedexLogo from '@/components/FedexLogo';
 import s from './page.module.css';
 
 const SPOT_TYPES = ['ftl', 'air', 'ocean'];
@@ -480,7 +482,7 @@ export default function QuotePage() {
               <div key={i} className={`${s.resultCard} ${isBest ? s.best : ''}`}>
                 {isBest && <div className={s.bestFlag}>&#9733; BEST RATE</div>}
                 <div className={s.carrierBadge} style={{ background: r.carrier.bg, color: r.carrier.color, border: `1.5px solid ${r.carrier.bc}` }}>
-                  {r.carrier.abbr}
+                  {r.carrier.id === 'fedex' ? <FedexLogo height={16} /> : r.carrier.abbr}
                 </div>
                 <div className={s.ri}>
                   <div className={s.riName}>
@@ -492,6 +494,7 @@ export default function QuotePage() {
                     <span className={s.riChip}>&#9201; {transitStr}</span>
                     {r.deliveryDate && <span className={`${s.riChip} ${s.riChipDelivery}`}>&#128197; Est. {r.deliveryDate}</span>}
                   </div>
+                  {r.carrier.id === 'fedex' && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>{FEDEX_DISCLAIMER}</div>}
                 </div>
                 <div className={s.rr}>
                   <div className={s.rrAmount}>{sym}{r.displayRate.toFixed(2)}</div>
