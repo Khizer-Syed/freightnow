@@ -214,6 +214,22 @@
   margin-bottom: 16px;
 }
 
+.success {
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.otpInput {
+  font-family: var(--mono);
+  font-size: 22px;
+  letter-spacing: .4em;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .wrapper { grid-template-columns: 1fr; }
   .left { display: none; }

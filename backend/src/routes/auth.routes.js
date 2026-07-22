@@ -27,6 +27,15 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const verifyOtpSchema = z.object({
+  pendingToken: z.string().min(1),
+  code: z.string().regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+
+const resendOtpSchema = z.object({
+  pendingToken: z.string().min(1),
+});
+
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(8),
@@ -43,6 +52,20 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const result = await authService.login(req.validated);
     res.json(result);
+  } catch (err) { next(err); }
+});
+
+router.post('/verify-otp', validate(verifyOtpSchema), async (req, res, next) => {
+  try {
+    const result = await authService.verifyLoginOtp(req.validated);
+    res.json(result);
+  } catch (err) { next(err); }
+});
+
+router.post('/resend-otp', validate(resendOtpSchema), async (req, res, next) => {
+  try {
+    await authService.resendLoginOtp(req.validated);
+    res.json({ message: 'A new code has been sent.' });
   } catch (err) { next(err); }
 });
 

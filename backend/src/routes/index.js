@@ -8,6 +8,7 @@ const claimRoutes = require('./claim.routes');
 const billingRoutes = require('./billing.routes');
 const profileRoutes = require('./profile.routes');
 const spotRateRoutes = require('./spotRate.routes');
+const fedexAccountRoutes = require('./fedexAccount.routes');
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/claims', claimRoutes);
 router.use('/billing', billingRoutes);
 router.use('/profile', profileRoutes);
 router.use('/spot-rates', spotRateRoutes);
+router.use('/fedex-account', fedexAccountRoutes);
 
 module.exports = router;

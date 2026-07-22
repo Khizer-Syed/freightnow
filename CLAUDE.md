@@ -25,10 +25,12 @@ IFF Cargo is a freight forwarding platform that compares shipping rates from 5 C
 │   │       └── billing/page.js    # Billing (/portal/billing)
 │   ├── components/
 │   │   ├── Sidebar.js             # Portal sidebar navigation
-│   │   └── Topbar.js              # Portal top bar
+│   │   ├── Topbar.js              # Portal top bar
+│   │   └── FedexConnectModal.js   # FedEx account connect flow (EULA + Factor 1/2 MFA)
 │   ├── lib/
 │   │   ├── api.js                 # API helper (fetchAPI with JWT auth)
-│   │   └── carriers.js            # Carrier data (colors, names, abbreviations)
+│   │   ├── carriers.js            # Carrier data (colors, names, abbreviations)
+│   │   └── fedexCompliance.js     # FedEx disclaimer text + placeholder EULA text
 │   └── public/
 │       ├── logo.svg, logo-white.svg, logo.png
 ├── backend/                        # Node.js + Express API (port 4000)
@@ -87,12 +89,13 @@ brew services stop postgresql@17
 ## Demo Credentials
 - **User:** john@acmecorp.com / `demo1234`
 - **Admin:** admin@iffcargo.com / `admin1234`
+- Login requires a 6-digit code after password (two-factor). No real email is sent — in dev the code is printed to the **backend console** as `[DEV EMAIL] To: ... code: ...`.
 
 ## Tech Stack
 - **Frontend:** Next.js 16 (App Router), React, CSS Modules
 - **Backend:** Node.js, Express, Prisma ORM
 - **Database:** PostgreSQL 17 (via Homebrew)
-- **Auth:** JWT + bcrypt (token stored in localStorage)
+- **Auth:** JWT + bcrypt (token stored in localStorage), plus a mandatory email-OTP second factor after password login
 - **Validation:** Zod
 - **Fonts:** Outfit (display), DM Sans (body), JetBrains Mono (mono)
 
@@ -109,14 +112,14 @@ brew services stop postgresql@17
 | Route | Description |
 |-------|-------------|
 | `/` | Landing page (hero, services, footer) |
-| `/login` | Split-screen login with API auth |
+| `/login` | Split-screen login with API auth + email-OTP two-factor step |
 | `/register` | 3-step registration (info → company → EULA) |
 | `/portal` | Dashboard (stats, quick action, recent shipments) |
-| `/portal/quote` | Rate comparison — 6 types (envelope, parcel, LTL = instant; FTL, air, ocean = spot rate) |
+| `/portal/quote` | Rate comparison — 6 types (envelope, parcel, LTL = instant; FTL, air, ocean = spot rate) — FedEx rate cards show the required FedEx disclaimer |
 | `/portal/shipments` | Shipment list with status filters, search, expandable detail rows |
 | `/portal/track` | Tracking number lookup with timeline visualization |
 | `/portal/claims` | Claims list + modal to file new claim |
-| `/portal/profile` | Personal info, company info, change password |
+| `/portal/profile` | Personal info, company info, change password, **Connect FedEx Account** (EULA + Factor 1/2 MFA) |
 | `/portal/billing` | Payment methods, invoices table, spending stats |
 
 ## Database (PostgreSQL)
@@ -139,7 +142,7 @@ brew services stop postgresql@17
 - Financial data (rates, invoices) requires consistency guarantees
 - Scales to millions of records without architecture changes
 
-## Database Schema (11 tables)
+## Database Schema (13 tables)
 
 ### Users & Companies
 | Table | What it stores |
@@ -177,6 +180,16 @@ brew services stop postgresql@17
 |-------|---------------|
 | **SpotRateRequest** | For FTL/air/ocean quotes needing manual pricing — requestNumber, shipment details, origin/dest ports (ocean), commodity, specialNotes, status, quotedRate, quotedAt |
 
+### FedEx Integrator Compliance
+| Table | What it stores |
+|-------|---------------|
+| **FedexAccountConnection** | A customer's own FedEx account connection — fedexAccountNumber, shippingAddress (JSON), eulaAcceptedAt, status (`awaiting_factor2`/`verified`/`failed`/`locked`), factor2Method (`pin_email`/`pin_sms`/`pin_call`/`invoice`), pinCodeHash + pinExpiresAt, attempts, lockedUntil (24h lockout after 5 failed attempts), mocked childKey/childSecret once verified |
+
+### Auth / Security
+| Table | What it stores |
+|-------|---------------|
+| **TwoFactorCode** | Login second factor — bcrypt-hashed 6-digit codeHash, expiresAt (10 min), attempts, consumedAt |
+
 ### Relationships
 ```
 User → Company (many-to-one)
@@ -186,6 +199,8 @@ User → Claims
 User → PaymentMethods
 User → Invoices → InvoiceItems → Shipment
 User → SpotRateRequests
+User → FedexAccountConnections
+User → TwoFactorCodes
 Quote → Shipment (one-to-one, when booked)
 ```
 
@@ -204,7 +219,9 @@ Quote → Shipment (one-to-one, when booked)
 | `POST /api/rate/all` | Get rates from all 5 carriers (core feature) |
 | `POST /api/rate/fedex` | Legacy FedEx endpoint (frontend compatibility) |
 | `POST /api/auth/register` | User registration |
-| `POST /api/auth/login` | Login, returns JWT |
+| `POST /api/auth/login` | Login step 1 — verifies password, emails a 6-digit code, returns `{twoFactorRequired, pendingToken}` (no JWT yet) |
+| `POST /api/auth/verify-otp` | Login step 2 — verifies the code, returns the real JWT |
+| `POST /api/auth/resend-otp` | Resend the login verification code |
 | `POST /api/shipments` | Book a shipment from a quote |
 | `GET /api/shipments` | List user shipments (filter: ?status=in_transit) |
 | `GET /api/tracking/:number` | Track a shipment |
@@ -214,6 +231,12 @@ Quote → Shipment (one-to-one, when booked)
 | `GET /api/billing/invoices` | Invoice history |
 | `GET/PUT /api/profile` | User profile management |
 | `POST /api/spot-rates` | Submit spot rate request (FTL/air/ocean) |
+| `POST /api/fedex-account` | Start a FedEx account connection (EULA acceptance + Factor 1: account number/address) |
+| `GET /api/fedex-account` | List the user's connected FedEx accounts |
+| `POST /api/fedex-account/:id/factor2/start` | Choose Factor 2 method (PIN via email/SMS/call, or invoice) and send/prepare it |
+| `POST /api/fedex-account/:id/factor2/verify-pin` | Verify the PIN code |
+| `POST /api/fedex-account/:id/factor2/verify-invoice` | Verify via FedEx invoice details |
+| `DELETE /api/fedex-account/:id` | Disconnect a FedEx account |
 
 ## Carrier Adapter Pattern
 Each carrier is in `backend/src/carriers/<name>.adapter.js` implementing a common interface:
@@ -228,6 +251,20 @@ All adapters are currently **mocked**. To enable live API calls, add credentials
 2. Register it in `backend/src/carriers/index.js`
 3. Add env vars to `.env` for live API credentials
 4. The carrier automatically appears in `/api/rate/all` results
+
+## FedEx Integrator Compliance (mocked)
+Implements the customer-facing parts of FedEx's Integrator program requirements (see `APIs/` for the source guidance doc): a customer can connect their own FedEx account from `/portal/profile`, gated by EULA acceptance and FedEx's Factor 1 + Factor 2 "End User registration" MFA flow. No live FedEx Account Registration API call is made — this mirrors how the carrier adapters are mocked.
+
+- **Backend:** `backend/src/services/fedexAccount.service.js` + `backend/src/routes/fedexAccount.routes.js` (mounted at `/api/fedex-account`). Factor 2 PIN codes are bcrypt-hashed, 10-minute expiry, 5 attempts before a 24-hour lockout — same shape as FedEx's spec. PIN codes are "delivered" via `console.log('[DEV FEDEX PIN] ...')` (no real email/SMS provider). Invoice validation is mocked (rejects invoices >90 days old or with missing/invalid fields). On success, a mock `child_key`/`child_secret` is generated via `crypto.randomBytes`.
+- **Frontend:** `frontend/components/FedexConnectModal.js` drives the 5-step UI (EULA → Factor 1 → Factor 2 choice → PIN/invoice entry → success), used from `/portal/profile`. `frontend/lib/fedexCompliance.js` exports the required FedEx disclaimer text (shown wherever FedEx marks/rates appear, e.g. `/portal/quote`) and the EULA text.
+- ⚠️ **The EULA text in `fedexCompliance.js` is placeholder legal text**, not FedEx's actual End User License Agreement — it must be replaced with the real text from the FedEx Developer Portal before any real FedEx Integrator validation submission.
+
+## Login Two-Factor Authentication
+After a correct password, login requires a 6-digit email code before a session JWT is issued — no SMTP provider is configured, so delivery is mocked via `backend/src/services/email.service.js` (`console.log('[DEV EMAIL] ...')`).
+
+- **Flow:** `POST /api/auth/login` validates the password and returns `{ twoFactorRequired: true, pendingToken }` (a purpose-scoped, 10-minute JWT — not usable as a normal auth token). The frontend (`frontend/app/login/page.js`) then shows a code-entry screen and calls `POST /api/auth/verify-otp` with `{ pendingToken, code }` to get the real JWT.
+- **Storage:** `TwoFactorCode` table — bcrypt-hashed code, 10-minute expiry, 5 attempts before requiring a resend (`POST /api/auth/resend-otp`).
+- Logic lives in `backend/src/services/auth.service.js` (`login`, `verifyLoginOtp`, `resendLoginOtp`).
 
 ## Markup Engine (backend/src/services/markup.service.js)
 ```

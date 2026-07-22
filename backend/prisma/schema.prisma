@@ -21,13 +21,15 @@ model User {
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id])
 
-  notifications  NotificationPreference?
-  quotes         Quote[]
-  shipments      Shipment[]
-  claims         Claim[]
-  paymentMethods PaymentMethod[]
-  invoices       Invoice[]
-  spotRates      SpotRateRequest[]
+  notifications    NotificationPreference?
+  quotes           Quote[]
+  shipments        Shipment[]
+  claims           Claim[]
+  paymentMethods   PaymentMethod[]
+  invoices         Invoice[]
+  spotRates        SpotRateRequest[]
+  fedexConnections FedexAccountConnection[]
+  twoFactorCodes   TwoFactorCode[]
 }
 
 model Company {
@@ -260,4 +262,48 @@ model SpotRateRequest {
 
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// FedEx Integrator "End User registration" — connecting a customer's own FedEx
+// account via Factor 1 (account number + address) + Factor 2 MFA (PIN or invoice).
+// Mocked: no live FedEx Account Registration API call is made yet.
+model FedexAccountConnection {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  fedexAccountNumber String
+  shippingAddress    String // JSON-encoded { street, city, province, postalCode, country }
+  eulaAcceptedAt      DateTime
+
+  status        String  @default("awaiting_factor2") // awaiting_factor2 | verified | failed | locked
+  factor2Method String? // pin_email | pin_sms | pin_call | invoice
+
+  pinCodeHash String?
+  pinExpiresAt DateTime?
+
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+
+  childKey    String?
+  childSecret String?
+  verifiedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Second factor for login — a short-lived, bcrypt-hashed 6-digit code emailed
+// (mocked via console.log in dev) after a correct password.
+model TwoFactorCode {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+
+  createdAt DateTime @default(now())
 }
