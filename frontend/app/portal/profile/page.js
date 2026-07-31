@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { fetchAPI } from '@/lib/api';
 import { FEDEX_DISCLAIMER } from '@/lib/fedexCompliance';
 import FedexConnectModal from '@/components/FedexConnectModal';
-import FedexLogo from '@/components/FedexLogo';
+import CarrierLogo from '@/components/CarrierLogo';
 import s from './page.module.css';
 
 export default function ProfilePage() {
@@ -119,7 +119,7 @@ export default function ProfilePage() {
 
       <div className="section-card">
         <div className={s.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FedexLogo height={16} />
+          <CarrierLogo id="fedex" label="FedEx" style={{ height: 16, width: 'auto', objectFit: 'contain' }} fallbackStyle={{ fontSize: 13, color: 'var(--navy)' }} />
           FedEx Shipping
         </div>
         {fedexConnections.length === 0 && (
