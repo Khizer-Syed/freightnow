@@ -241,7 +241,7 @@
   border-radius: var(--radius);
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 68px 1fr auto;
   gap: 14px;
   align-items: center;
   margin-bottom: 8px;
@@ -275,9 +275,9 @@
 }
 
 .carrierBadge {
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
+  width: 68px;
+  height: 40px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;

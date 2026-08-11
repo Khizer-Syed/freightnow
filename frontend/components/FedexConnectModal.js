@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { fetchAPI } from '@/lib/api';
 import { FEDEX_DISCLAIMER, FEDEX_EULA_TEXT } from '@/lib/fedexCompliance';
-import FedexLogo from './FedexLogo';
+import CarrierLogo from './CarrierLogo';
 import s from './FedexConnectModal.module.css';
 
 const FACTOR2_METHODS = [
@@ -142,7 +142,7 @@ export default function FedexConnectModal({ onClose, onConnected }) {
     <div className={s.overlay} onClick={onClose}>
       <div className={s.card} onClick={e => e.stopPropagation()}>
         <div className={s.header}>
-          <FedexLogo height={22} className={s.brandMark} />
+          <CarrierLogo id="fedex" label="FedEx" className={s.brandMark} style={{ height: 22, width: 'auto', objectFit: 'contain' }} fallbackStyle={{ fontSize: 16, color: 'var(--navy)' }} />
           <div className={s.title}>Activate FedEx Shipping</div>
         </div>
 
