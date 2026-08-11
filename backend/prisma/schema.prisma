@@ -14,7 +14,7 @@ model User {
   firstName    String
   lastName     String
   phone        String?
-  role         String   @default("customer")
+  role         String   @default("customer") // customer | company_admin | iff_staff | iff_admin
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -23,6 +23,7 @@ model User {
 
   notifications    NotificationPreference?
   quotes           Quote[]
+  bookings         Booking[]
   shipments        Shipment[]
   claims           Claim[]
   paymentMethods   PaymentMethod[]
@@ -43,7 +44,8 @@ model Company {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  users User[]
+  users    User[]
+  bookings Booking[]
 }
 
 model NotificationPreference {
@@ -89,7 +91,7 @@ model Quote {
   status    String   @default("active")
   createdAt DateTime @default(now())
 
-  shipment Shipment?
+  booking Booking?
 }
 
 model QuoteRate {
@@ -106,6 +108,49 @@ model QuoteRate {
   estimatedDelivery String?
   isLiveRate        Boolean @default(false)
   isBestRate        Boolean @default(false)
+
+  bookings Booking[]
+}
+
+// The commercial/administrative record — what was agreed, at what price, paid or not,
+// whose reference. Kept distinct from Shipment (the physical/operational record) so a
+// payment that succeeded but a shipment the carrier rejected can be told apart from a
+// normal booking, per the client's Customer Portal Guide.
+model Booking {
+  id            String @id @default(uuid())
+  bookingNumber String @unique
+
+  quoteId     String    @unique
+  quote       Quote     @relation(fields: [quoteId], references: [id])
+  quoteRateId String
+  quoteRate   QuoteRate @relation(fields: [quoteRateId], references: [id])
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  companyId String? // snapshot of user.companyId at booking time — enables company-level scoping later
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  carrierId   String // frozen copy from the chosen QuoteRate
+  carrierName String
+  serviceName String
+
+  costRate Float // frozen QuoteRate.baseRate — what IFF pays the carrier, never shown to the customer
+  sellRate Float // frozen QuoteRate.displayRate — what the customer pays
+  currency String @default("CAD")
+
+  customerReference String? // customer's own PO / reference number
+
+  paymentStatus String @default("not_required") // not_required | pending | paid | failed
+  status        String @default("confirmed") // confirmed | cancelled
+
+  pickupConfirmationNumber String?
+  pickupConfirmedAt        DateTime?
+
+  bookedAt    DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cancelledAt DateTime?
+
+  shipment Shipment?
 }
 
 model Shipment {
@@ -113,8 +158,9 @@ model Shipment {
   trackingNumber String @unique
   userId         String
   user           User   @relation(fields: [userId], references: [id])
-  quoteId        String? @unique
-  quote          Quote?  @relation(fields: [quoteId], references: [id])
+  companyId      String? // denormalized snapshot, same purpose as Booking.companyId
+  bookingId      String  @unique
+  booking        Booking @relation(fields: [bookingId], references: [id])
 
   carrierId      String
   carrierName    String
@@ -136,9 +182,6 @@ model Shipment {
   declaredValue  Float?
   commodity      String?
   accessorials   String?
-
-  baseRate    Float
-  displayRate Float
 
   status            String   @default("pending")
   estimatedDelivery String?

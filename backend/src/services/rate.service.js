@@ -48,43 +48,54 @@ async function getAllRates(params, userId) {
     quoteNumber = await generateQuoteNumber();
     expiresAt = endOfDay(new Date());
 
-    const quote = await prisma.quote.create({
-      data: {
-        quoteNumber,
-        userId,
-        shipmentType: params.shipmentType,
-        originCity: params.origin.city,
-        originPostal: params.origin.postalCode || '',
-        originCountry: params.origin.country,
-        destCity: params.destination.city,
-        destPostal: params.destination.postalCode || '',
-        destCountry: params.destination.country,
-        weight: params.weight,
-        pieces: params.pieces || 1,
-        dimL: params.dimensions?.length,
-        dimW: params.dimensions?.width,
-        dimH: params.dimensions?.height,
-        freightClass: params.freightClass,
-        currency: params.currency || 'CAD',
-        pickupDate: params.pickupDate,
-        declaredValue: params.declaredValue,
-        commodity: params.commodity,
-        accessorials: params.accessorials ? JSON.stringify(params.accessorials) : null,
-        expiresAt,
-        rates: {
-          create: processedRates.map(r => ({
-            carrierId: r.carrierId,
-            carrierName: r.carrierName,
-            serviceName: r.serviceName,
-            baseRate: r.baseRate,
-            displayRate: r.displayRate,
-            transitDays: r.transitDays,
-            estimatedDelivery: r.deliveryDate,
-            isLiveRate: r.isLive || false,
-            isBestRate: r.isBestRate || false,
-          })),
+    const quote = await prisma.$transaction(async (tx) => {
+      const createdQuote = await tx.quote.create({
+        data: {
+          quoteNumber,
+          userId,
+          shipmentType: params.shipmentType,
+          originCity: params.origin.city,
+          originPostal: params.origin.postalCode || '',
+          originCountry: params.origin.country,
+          destCity: params.destination.city,
+          destPostal: params.destination.postalCode || '',
+          destCountry: params.destination.country,
+          weight: params.weight,
+          pieces: params.pieces || 1,
+          dimL: params.dimensions?.length,
+          dimW: params.dimensions?.width,
+          dimH: params.dimensions?.height,
+          freightClass: params.freightClass,
+          currency: params.currency || 'CAD',
+          pickupDate: params.pickupDate,
+          declaredValue: params.declaredValue,
+          commodity: params.commodity,
+          accessorials: params.accessorials ? JSON.stringify(params.accessorials) : null,
+          expiresAt,
         },
-      },
+      });
+
+      // Created individually (rather than a nested `rates: { create: [...] }`) so each
+      // QuoteRate's id can be captured and returned to the client — needed to book a
+      // specific rate via POST /api/bookings.
+      const createdRates = await Promise.all(processedRates.map(r => tx.quoteRate.create({
+        data: {
+          quoteId: createdQuote.id,
+          carrierId: r.carrierId,
+          carrierName: r.carrierName,
+          serviceName: r.serviceName,
+          baseRate: r.baseRate,
+          displayRate: r.displayRate,
+          transitDays: r.transitDays,
+          estimatedDelivery: r.deliveryDate,
+          isLiveRate: r.isLive || false,
+          isBestRate: r.isBestRate || false,
+        },
+      })));
+
+      processedRates.forEach((r, i) => { r.quoteRateId = createdRates[i].id; });
+
+      return createdQuote;
     });
     quoteId = quote.id;
   }
@@ -94,6 +105,8 @@ async function getAllRates(params, userId) {
     quoteNumber,
     expiresAt: expiresAt?.toISOString(),
     rates: processedRates.map(r => ({
+      quoteId,
+      quoteRateId: r.quoteRateId || null,
       carrierId: r.carrierId,
       carrierName: r.carrierName,
       serviceName: r.serviceName,

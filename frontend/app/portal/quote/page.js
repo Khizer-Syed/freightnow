@@ -84,6 +84,7 @@ export default function QuotePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [spotSuccess, setSpotSuccess] = useState(false);
+  const [booking, setBooking] = useState({}); // { [quoteRateId]: 'loading' | 'booked' | 'error' }
 
   // Origin/Destination
   const [origCity, setOrigCity] = useState('');
@@ -190,11 +191,13 @@ export default function QuotePage() {
         quoteResults = data.rates.map(r => ({
           carrier: CARRIERS.find(c => c.id === r.carrierId) || CARRIERS[0],
           rate: r.baseRate,
-          displayRate: r.totalRate,
+          displayRate: r.displayRate,
           transitDays: r.transitDays,
           deliveryDate: r.deliveryDate || calcDelivery(r.transitDays, pickupDate),
           service: r.serviceName,
-          live: r.live || false,
+          live: r.isLiveRate || false,
+          quoteId: r.quoteId,
+          quoteRateId: r.quoteRateId,
         }));
       }
     } catch {
@@ -211,6 +214,22 @@ export default function QuotePage() {
     quoteResults.sort((a, b) => a.displayRate - b.displayRate);
     setResults({ quotes: quoteResults, summary: { count: quoteResults.length, orig: origCity || origPostal, dest: destCity || destPostal, type: { envelope: 'Envelope', parcel: 'Parcel', ltl: 'LTL Freight' }[currentType], weight, currency: getFields().currency } });
     setLoading(false);
+  }
+
+  async function handleBook(r) {
+    if (!r.quoteId || !r.quoteRateId) return;
+    setBooking(prev => ({ ...prev, [r.quoteRateId]: 'loading' }));
+    try {
+      const data = await fetchAPI('/api/bookings', {
+        method: 'POST',
+        body: JSON.stringify({ quoteId: r.quoteId, quoteRateId: r.quoteRateId }),
+      });
+      setBooking(prev => ({ ...prev, [r.quoteRateId]: 'booked' }));
+      alert(`Booked! Booking ${data.booking.bookingNumber} — tracking number ${data.shipment.trackingNumber}.`);
+    } catch (err) {
+      setBooking(prev => ({ ...prev, [r.quoteRateId]: 'error' }));
+      alert(err.error?.message || 'Could not book this rate.');
+    }
   }
 
   async function submitSpotRate() {
@@ -477,6 +496,8 @@ export default function QuotePage() {
             const savings = i > 0 ? (r.displayRate - cheapest).toFixed(2) : 0;
             const sym = results.summary.currency === 'CAD' ? 'C$' : '$';
             const transitStr = r.transitDays ? `${r.transitDays}–${parseInt(r.transitDays) + 1} business days` : '—';
+            const canBook = !!(r.quoteId && r.quoteRateId);
+            const bookState = r.quoteRateId ? booking[r.quoteRateId] : undefined;
 
             return (
               <div key={i} className={`${s.resultCard} ${isBest ? s.best : ''}`}>
@@ -504,7 +525,14 @@ export default function QuotePage() {
                   <div className={s.rrAmount}>{sym}{r.displayRate.toFixed(2)}</div>
                   <div className={s.rrCur}>{results.summary.currency}</div>
                   {!isBest && <div className={s.rrSavings}>+${savings} vs best</div>}
-                  <button className={s.btnBook}>Book this rate &rarr;</button>
+                  <button
+                    className={s.btnBook}
+                    disabled={!canBook || bookState === 'loading' || bookState === 'booked'}
+                    onClick={() => handleBook(r)}
+                    title={!canBook ? 'Sign in to book this rate' : undefined}
+                  >
+                    {bookState === 'loading' ? 'Booking…' : bookState === 'booked' ? 'Booked ✓' : canBook ? 'Book this rate →' : 'Sign in to book'}
+                  </button>
                 </div>
               </div>
             );

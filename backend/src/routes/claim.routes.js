@@ -43,4 +43,8 @@ router.get('/:id', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// TODO: once a staff-facing "process this claim" endpoint exists (update status/approved
+// amount), gate it with requireRole(ROLES.IFF_STAFF, ROLES.IFF_ADMIN). Same for any future
+// "view all customers' claims" endpoint.
+
 module.exports = router;

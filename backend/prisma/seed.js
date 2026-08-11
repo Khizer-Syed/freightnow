@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
+const bookingService = require('../src/services/booking.service');
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,7 @@ async function main() {
     },
   });
 
-  // Create demo user (john@acmecorp.com / demo1234)
+  // Create demo user (john@acmecorp.com / demo1234) — customer
   const passwordHash = await bcrypt.hash('demo1234', 12);
   const user = await prisma.user.create({
     data: {
@@ -43,7 +44,35 @@ async function main() {
     },
   });
 
-  // Create admin user
+  // Same company, company_admin role — manages saved cards/address book for Acme Corp
+  const janeHash = await bcrypt.hash('demo1234', 12);
+  await prisma.user.create({
+    data: {
+      email: 'jane@acmecorp.com',
+      passwordHash: janeHash,
+      firstName: 'Jane',
+      lastName: 'Smith',
+      phone: '416 555 0101',
+      role: 'company_admin',
+      companyId: company.id,
+      notifications: { create: {} },
+    },
+  });
+
+  // IFF staff — prices spot requests, processes claims
+  const staffHash = await bcrypt.hash('staff1234', 12);
+  await prisma.user.create({
+    data: {
+      email: 'staff@iffcargo.com',
+      passwordHash: staffHash,
+      firstName: 'Sam',
+      lastName: 'Staff',
+      role: 'iff_staff',
+      notifications: { create: {} },
+    },
+  });
+
+  // IFF admin — everything, including markup rules and customer discounts
   const adminHash = await bcrypt.hash('admin1234', 12);
   await prisma.user.create({
     data: {
@@ -51,24 +80,24 @@ async function main() {
       passwordHash: adminHash,
       firstName: 'Admin',
       lastName: 'IFF',
-      role: 'admin',
+      role: 'iff_admin',
       notifications: { create: {} },
     },
   });
 
   // Create payment methods
-  const visa = await prisma.paymentMethod.create({
+  await prisma.paymentMethod.create({
     data: { userId: user.id, type: 'visa', last4: '4242', expiryMonth: 12, expiryYear: 2027, isDefault: true },
   });
   await prisma.paymentMethod.create({
     data: { userId: user.id, type: 'mastercard', last4: '8888', expiryMonth: 6, expiryYear: 2028, isDefault: false },
   });
 
-  // Create quotes
   const now = new Date();
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-  const quote1 = await prisma.quote.create({
+  // A browsable, unbooked quote (5 carrier rates, none selected yet)
+  await prisma.quote.create({
     data: {
       quoteNumber: 'Q-2026-0001',
       userId: user.id,
@@ -97,68 +126,120 @@ async function main() {
         ],
       },
     },
-    include: { rates: true },
   });
 
-  // Create shipments with tracking events
-  const shipments = [
-    { tracking: 'IFF-2026-00001', carrier: 'fedex', carrierName: 'FedEx', service: 'Freight Economy', type: 'ltl', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Chicago', destPostal: '60601', destCountry: 'US', weight: 500, pieces: 2, baseRate: 245.80, displayRate: 319.54, status: 'delivered', estDelivery: '2026-06-28', actualDelivery: '2026-06-27' },
-    { tracking: 'IFF-2026-00002', carrier: 'dayross', carrierName: 'Day & Ross', service: 'Direct LTL', type: 'ltl', origCity: 'Montreal', origPostal: 'H2X1Y4', origCountry: 'CA', destCity: 'Vancouver', destPostal: 'V6B2W2', destCountry: 'CA', weight: 350, pieces: 1, baseRate: 412.50, displayRate: 536.25, status: 'delivered', estDelivery: '2026-06-30', actualDelivery: '2026-06-30' },
-    { tracking: 'IFF-2026-00003', carrier: 'fedex', carrierName: 'FedEx', service: 'Ground', type: 'parcel', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'New York', destPostal: '10001', destCountry: 'US', weight: 12, pieces: 1, baseRate: 45.20, displayRate: 76.84, status: 'in_transit', estDelivery: '2026-07-09', actualDelivery: null },
-    { tracking: 'IFF-2026-00004', carrier: 'manitoulin', carrierName: 'Manitoulin', service: 'Consolidated LTL', type: 'ltl', origCity: 'Calgary', origPostal: 'T2P1J9', origCountry: 'CA', destCity: 'Toronto', destPostal: 'M5V3A8', destCountry: 'CA', weight: 820, pieces: 3, baseRate: 580.00, displayRate: 754.00, status: 'in_transit', estDelivery: '2026-07-11', actualDelivery: null },
-    { tracking: 'IFF-2026-00005', carrier: 'polaris', carrierName: 'Polaris', service: 'Freight Select', type: 'ltl', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Edmonton', destPostal: 'T5J0N3', destCountry: 'CA', weight: 1200, pieces: 4, baseRate: 890.00, displayRate: 1157.00, status: 'in_transit', estDelivery: '2026-07-12', actualDelivery: null },
-    { tracking: 'IFF-2026-00006', carrier: 'xpo', carrierName: 'XPO Logistics', service: 'LTL Priority', type: 'ltl', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Los Angeles', destPostal: '90001', destCountry: 'US', weight: 650, pieces: 2, baseRate: 720.00, displayRate: 936.00, status: 'pending', estDelivery: '2026-07-14', actualDelivery: null },
-    { tracking: 'IFF-2026-00007', carrier: 'fedex', carrierName: 'FedEx', service: 'Express Saver', type: 'envelope', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Ottawa', destPostal: 'K1A0A9', destCountry: 'CA', weight: 0.5, pieces: 1, baseRate: 22.50, displayRate: 38.25, status: 'delivered', estDelivery: '2026-07-02', actualDelivery: '2026-07-02' },
-  ];
+  // Booked shipments — each goes through a real Quote -> Booking -> Shipment chain.
+  // Fixtures with a specific historical status (delivered/in_transit) are assembled
+  // directly since the real booking flow can't yet produce backdated carrier-scan
+  // history on its own. One fixture (XPO, still "pending") runs through the real
+  // bookingService.createBooking() end-to-end, exercising the actual code path.
+  const bookedDate = new Date('2026-06-25T10:00:00Z');
 
-  for (const s of shipments) {
-    const shipment = await prisma.shipment.create({
+  async function createHistoricalFixture(quoteSeq, bookingSeq, f) {
+    const quote = await prisma.quote.create({
       data: {
-        trackingNumber: s.tracking,
+        quoteNumber: `Q-2026-${quoteSeq}`,
         userId: user.id,
-        carrierId: s.carrier,
-        carrierName: s.carrierName,
-        serviceName: s.service,
-        shipmentType: s.type,
-        originCity: s.origCity,
-        originPostal: s.origPostal,
-        originCountry: s.origCountry,
-        destCity: s.destCity,
-        destPostal: s.destPostal,
-        destCountry: s.destCountry,
-        weight: s.weight,
-        pieces: s.pieces,
+        shipmentType: f.type,
+        originCity: f.origCity, originPostal: f.origPostal, originCountry: f.origCountry,
+        destCity: f.destCity, destPostal: f.destPostal, destCountry: f.destCountry,
+        weight: f.weight, pieces: f.pieces,
         currency: 'CAD',
-        baseRate: s.baseRate,
-        displayRate: s.displayRate,
-        status: s.status,
-        estimatedDelivery: s.estDelivery,
-        actualDelivery: s.actualDelivery,
+        expiresAt: endOfToday,
+        status: 'booked',
+        rates: {
+          create: [{
+            carrierId: f.carrier, carrierName: f.carrierName, serviceName: f.service,
+            baseRate: f.baseRate, displayRate: f.displayRate, transitDays: 4,
+            estimatedDelivery: f.estDelivery, isLiveRate: false, isBestRate: true,
+          }],
+        },
+      },
+      include: { rates: true },
+    });
+    const rate = quote.rates[0];
+
+    const booking = await prisma.booking.create({
+      data: {
+        bookingNumber: `BK-2026-${bookingSeq}`,
+        quoteId: quote.id,
+        quoteRateId: rate.id,
+        userId: user.id,
+        companyId: company.id,
+        carrierId: f.carrier, carrierName: f.carrierName, serviceName: f.service,
+        costRate: f.baseRate, sellRate: f.displayRate, currency: 'CAD',
+        status: 'confirmed',
       },
     });
 
-    // Add tracking events based on status
-    const events = [];
-    const bookedDate = new Date('2026-06-25T10:00:00Z');
+    const shipment = await prisma.shipment.create({
+      data: {
+        trackingNumber: f.tracking,
+        userId: user.id,
+        companyId: company.id,
+        bookingId: booking.id,
+        carrierId: f.carrier, carrierName: f.carrierName, serviceName: f.service,
+        shipmentType: f.type,
+        originCity: f.origCity, originPostal: f.origPostal, originCountry: f.origCountry,
+        destCity: f.destCity, destPostal: f.destPostal, destCountry: f.destCountry,
+        weight: f.weight, pieces: f.pieces,
+        currency: 'CAD',
+        status: f.status,
+        estimatedDelivery: f.estDelivery,
+        actualDelivery: f.actualDelivery,
+      },
+    });
 
-    events.push({ event: 'Booked', location: s.origCity, timestamp: bookedDate, description: 'Shipment booked - awaiting carrier pickup' });
-
-    if (s.status !== 'pending') {
-      events.push({ event: 'Picked up', location: s.origCity, timestamp: new Date(bookedDate.getTime() + 86400000), description: 'Package picked up by carrier' });
+    const events = [
+      { event: 'Booked', location: f.origCity, timestamp: bookedDate, description: 'Shipment booked - awaiting carrier pickup' },
+    ];
+    if (f.status !== 'pending') {
+      events.push({ event: 'Picked up', location: f.origCity, timestamp: new Date(bookedDate.getTime() + 86400000), description: 'Package picked up by carrier' });
       events.push({ event: 'In transit', location: 'Distribution Center', timestamp: new Date(bookedDate.getTime() + 172800000), description: 'Shipment in transit to destination' });
     }
-
-    if (s.status === 'delivered') {
-      events.push({ event: 'Out for delivery', location: s.destCity, timestamp: new Date(bookedDate.getTime() + 259200000), description: 'Out for delivery' });
-      events.push({ event: 'Delivered', location: s.destCity, timestamp: new Date(bookedDate.getTime() + 345600000), description: 'Delivered - signed by receiver' });
+    if (f.status === 'delivered') {
+      events.push({ event: 'Out for delivery', location: f.destCity, timestamp: new Date(bookedDate.getTime() + 259200000), description: 'Out for delivery' });
+      events.push({ event: 'Delivered', location: f.destCity, timestamp: new Date(bookedDate.getTime() + 345600000), description: 'Delivered - signed by receiver' });
     }
-
     for (const evt of events) {
-      await prisma.trackingEvent.create({
-        data: { shipmentId: shipment.id, ...evt },
-      });
+      await prisma.trackingEvent.create({ data: { shipmentId: shipment.id, ...evt } });
     }
   }
+
+  await createHistoricalFixture('0002', '0001', { tracking: 'IFF-2026-00001', carrier: 'fedex', carrierName: 'FedEx', service: 'Freight Economy', type: 'ltl', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Chicago', destPostal: '60601', destCountry: 'US', weight: 500, pieces: 2, baseRate: 245.80, displayRate: 319.54, status: 'delivered', estDelivery: '2026-06-28', actualDelivery: '2026-06-27' });
+  await createHistoricalFixture('0003', '0002', { tracking: 'IFF-2026-00002', carrier: 'dayross', carrierName: 'Day & Ross', service: 'Direct LTL', type: 'ltl', origCity: 'Montreal', origPostal: 'H2X1Y4', origCountry: 'CA', destCity: 'Vancouver', destPostal: 'V6B2W2', destCountry: 'CA', weight: 350, pieces: 1, baseRate: 412.50, displayRate: 536.25, status: 'delivered', estDelivery: '2026-06-30', actualDelivery: '2026-06-30' });
+  await createHistoricalFixture('0004', '0003', { tracking: 'IFF-2026-00003', carrier: 'fedex', carrierName: 'FedEx', service: 'Ground', type: 'parcel', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'New York', destPostal: '10001', destCountry: 'US', weight: 12, pieces: 1, baseRate: 45.20, displayRate: 76.84, status: 'in_transit', estDelivery: '2026-07-09', actualDelivery: null });
+  await createHistoricalFixture('0005', '0004', { tracking: 'IFF-2026-00004', carrier: 'manitoulin', carrierName: 'Manitoulin', service: 'Consolidated LTL', type: 'ltl', origCity: 'Calgary', origPostal: 'T2P1J9', origCountry: 'CA', destCity: 'Toronto', destPostal: 'M5V3A8', destCountry: 'CA', weight: 820, pieces: 3, baseRate: 580.00, displayRate: 754.00, status: 'in_transit', estDelivery: '2026-07-11', actualDelivery: null });
+  await createHistoricalFixture('0006', '0005', { tracking: 'IFF-2026-00005', carrier: 'polaris', carrierName: 'Polaris', service: 'Freight Select', type: 'ltl', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Edmonton', destPostal: 'T5J0N3', destCountry: 'CA', weight: 1200, pieces: 4, baseRate: 890.00, displayRate: 1157.00, status: 'in_transit', estDelivery: '2026-07-12', actualDelivery: null });
+
+  // Real end-to-end booking flow — proves Quote -> Booking -> Shipment actually works
+  const xpoQuote = await prisma.quote.create({
+    data: {
+      quoteNumber: 'Q-2026-0007',
+      userId: user.id,
+      shipmentType: 'ltl',
+      originCity: 'Toronto', originPostal: 'M5V3A8', originCountry: 'CA',
+      destCity: 'Los Angeles', destPostal: '90001', destCountry: 'US',
+      weight: 650, pieces: 2,
+      currency: 'CAD',
+      expiresAt: endOfToday,
+      status: 'active',
+      rates: {
+        create: [{
+          carrierId: 'xpo', carrierName: 'XPO Logistics', serviceName: 'LTL Priority',
+          baseRate: 720.00, displayRate: 936.00, transitDays: 5,
+          estimatedDelivery: '2026-07-14', isLiveRate: false, isBestRate: true,
+        }],
+      },
+    },
+    include: { rates: true },
+  });
+  await bookingService.createBooking(user.id, {
+    quoteId: xpoQuote.id,
+    quoteRateId: xpoQuote.rates[0].id,
+  });
+
+  await createHistoricalFixture('0008', '0007', { tracking: 'IFF-2026-00007', carrier: 'fedex', carrierName: 'FedEx', service: 'Express Saver', type: 'envelope', origCity: 'Toronto', origPostal: 'M5V3A8', origCountry: 'CA', destCity: 'Ottawa', destPostal: 'K1A0A9', destCountry: 'CA', weight: 0.5, pieces: 1, baseRate: 22.50, displayRate: 38.25, status: 'delivered', estDelivery: '2026-07-02', actualDelivery: '2026-07-02' });
 
   // Create claims
   const claimsData = [
@@ -209,8 +290,10 @@ async function main() {
   }
 
   console.log('Seed completed successfully!');
-  console.log('Demo user: john@acmecorp.com / demo1234');
-  console.log('Admin user: admin@iffcargo.com / admin1234');
+  console.log('Customer:      john@acmecorp.com / demo1234');
+  console.log('Company admin: jane@acmecorp.com / demo1234');
+  console.log('IFF staff:     staff@iffcargo.com / staff1234');
+  console.log('IFF admin:     admin@iffcargo.com / admin1234');
 }
 
 main()
