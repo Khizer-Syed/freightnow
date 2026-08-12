@@ -37,7 +37,11 @@ export default function LoginPage() {
         router.push('/portal');
       }
     } catch (err) {
-      setError(extractError(err, 'Invalid email or password'));
+      if (err instanceof TypeError || err.message === 'Failed to fetch') {
+        setError('Cannot reach the server. Make sure the backend is running on port 4000.');
+      } else {
+        setError(extractError(err, 'Invalid email or password'));
+      }
     } finally {
       setLoading(false);
     }
@@ -55,7 +59,11 @@ export default function LoginPage() {
       setToken(data.token);
       router.push('/portal');
     } catch (err) {
-      setError(extractError(err, 'That code didn’t work. Please try again.'));
+      if (err instanceof TypeError || err.message === 'Failed to fetch') {
+        setError('Cannot reach the server. Make sure the backend is running on port 4000.');
+      } else {
+        setError(extractError(err, "That code didn't work. Please try again."));
+      }
     } finally {
       setLoading(false);
     }

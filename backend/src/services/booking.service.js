@@ -55,18 +55,17 @@ async function createBooking(userId, { quoteId, quoteRateId, customerReference }
 
 async function getUserBookings(userId, { status, page = 1, limit = 10 } = {}) {
   const skip = (page - 1) * limit;
-  const where = { user: userId };
-  if (status && status !== 'all') where.status = status;
+  const filter = { user: userId };
+  if (status && status !== 'all') filter.status = status;
 
   const [bookings, total] = await Promise.all([
-    prisma.booking.findMany({
-      where,
-      orderBy: { bookedAt: 'desc' },
-      skip,
-      take: limit,
-      include: { quote: { select: { originCity: true, originPostal: true, destCity: true, destPostal: true, shipmentType: true } } },
-    }),
-    prisma.booking.count({ where }),
+    Booking.find(filter)
+      .sort({ bookedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('quote', 'originCity originPostal destCity destPostal shipmentType')
+      .lean(),
+    Booking.countDocuments(filter),
   ]);
 
   return { bookings, pagination: { page, limit, total } };
