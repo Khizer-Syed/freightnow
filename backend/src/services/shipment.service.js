@@ -71,6 +71,7 @@ async function getUserShipments(userId, { status, page = 1, limit = 10, search }
       orderBy: { bookedAt: 'desc' },
       skip,
       take: limit,
+      include: { booking: { select: { bookingNumber: true, sellRate: true } } },
     }),
     prisma.shipment.count({ where }),
   ]);

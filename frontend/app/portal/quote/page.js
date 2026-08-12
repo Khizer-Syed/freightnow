@@ -169,17 +169,19 @@ export default function QuotePage() {
     try {
       const body = {
         shipmentType: currentType,
-        origCity: origCity.trim(),
-        origPostal: origPostal.trim().replace(/\s/g, ''),
-        origCountry,
-        destCity: destCity.trim(),
-        destPostal: destPostal.trim().replace(/\s/g, ''),
-        destCountry,
+        origin: {
+          city: origCity.trim() || undefined,
+          postalCode: origPostal.trim().replace(/\s/g, '') || undefined,
+          country: origCountry,
+        },
+        destination: {
+          city: destCity.trim() || undefined,
+          postalCode: destPostal.trim().replace(/\s/g, '') || undefined,
+          country: destCountry,
+        },
         weight,
         pieces,
-        dimL: parseInt(dimL),
-        dimW: parseInt(dimW),
-        dimH: parseInt(dimH),
+        dimensions: { length: parseInt(dimL), width: parseInt(dimW), height: parseInt(dimH) },
         freightClass: fc || '70',
         currency,
         ...(pickupDate && { pickupDate }),

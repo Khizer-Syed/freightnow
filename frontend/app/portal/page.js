@@ -6,21 +6,59 @@ import s from './page.module.css';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ shipmentsThisMonth: 12, totalSpent: 4218, inTransit: 3, saved: 681 });
+  const [quotes, setQuotes] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [shipments, setShipments] = useState([]);
+  const [bookingAction, setBookingAction] = useState({});
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [statsData, shipmentsData] = await Promise.all([
+        const [statsData, quotesData, bookingsData, shipmentsData] = await Promise.all([
           fetchAPI('/api/billing/stats').catch(() => null),
+          fetchAPI('/api/quotes?limit=5').catch(() => null),
+          fetchAPI('/api/bookings?limit=5').catch(() => null),
           fetchAPI('/api/shipments?limit=5').catch(() => null),
         ]);
         if (statsData) setStats(statsData);
+        if (quotesData?.quotes) setQuotes(quotesData.quotes);
+        if (bookingsData?.bookings) setBookings(bookingsData.bookings);
         if (shipmentsData?.shipments) setShipments(shipmentsData.shipments);
       } catch {}
     }
     loadData();
   }, []);
+
+  function isQuoteLive(quote) {
+    return new Date(quote.expiresAt) > new Date();
+  }
+
+  function formatQuoteTime(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr; // Already formatted string (demo data)
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    if (isToday) {
+      return `Today, ${d.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}`;
+    }
+    return d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  async function handleBook(quote) {
+    const bestRate = quote.rates?.[0];
+    if (!bestRate) return;
+    setBookingAction(prev => ({ ...prev, [bestRate.id]: 'loading' }));
+    try {
+      await fetchAPI('/api/bookings', {
+        method: 'POST',
+        body: JSON.stringify({ quoteId: quote.id, quoteRateId: bestRate.id }),
+      });
+      setBookingAction(prev => ({ ...prev, [bestRate.id]: 'booked' }));
+    } catch {
+      setBookingAction(prev => ({ ...prev, [bestRate.id]: 'error' }));
+    }
+  }
 
   function getStatusClass(status) {
     if (status === 'delivered') return s.statusDelivered;
@@ -34,15 +72,43 @@ export default function DashboardPage() {
     return '○ Pending pickup';
   }
 
+  function getBookingStatusClass(status) {
+    if (status === 'confirmed') return s.statusConfirmed;
+    if (status === 'cancelled') return s.statusCancelled;
+    return s.statusPending;
+  }
+
+  function getBookingStatusLabel(status) {
+    if (status === 'confirmed') return '● Confirmed';
+    if (status === 'cancelled') return '✕ Cancelled';
+    return '○ ' + (status || 'Pending');
+  }
+
   // Fallback demo data
-  const demoShipments = [
-    { trackingNumber: '1Z999AA1234567890', route: 'Toronto → Chicago', carrier: 'FedEx Freight', service: 'Freight Economy', date: 'May 20', cost: 'C$312.40', status: 'delivered' },
-    { trackingNumber: '7489234572834', route: 'Toronto → New York', carrier: 'XPO Logistics', service: 'Standard LTL', date: 'May 18', cost: 'C$228.75', status: 'delivered' },
-    { trackingNumber: '1Z888BB9876543210', route: 'Mississauga → Detroit', carrier: 'Day & Ross', service: 'Freight Priority', date: 'May 22', cost: 'C$185.60', status: 'in_transit' },
-    { trackingNumber: 'MAN-2026-00481', route: 'Toronto → Montreal', carrier: 'Manitoulin', service: 'Standard LTL', date: 'May 23', cost: 'C$142.30', status: 'in_transit' },
-    { trackingNumber: 'POL-2026-00192', route: 'Brampton → Ottawa', carrier: 'Polaris', service: 'Ground', date: 'May 25', cost: 'C$98.50', status: 'pending' },
+  const demoQuotes = [
+    { quoteNumber: 'Q-2026-0091', route: 'Toronto → Chicago', shipmentType: 'LTL Freight', carrier: 'FedEx Freight', service: 'Freight Economy', rate: 'C$312.40', delivery: 'Tue, May 27', quotedAt: 'Today, 9:14 AM', live: true },
+    { quoteNumber: 'Q-2026-0090', route: 'Mississauga → Detroit', shipmentType: 'Parcel', carrier: 'Day & Ross', service: 'Express Saver', rate: 'C$48.20', delivery: 'Mon, May 26', quotedAt: 'Today, 8:52 AM', live: true },
+    { quoteNumber: 'Q-2026-0089', route: 'Toronto → Montreal', shipmentType: 'Envelope', carrier: 'FedEx', service: 'Priority Overnight', rate: 'C$24.80', delivery: 'Mon, May 26', quotedAt: 'Yesterday, 4:38 PM', live: false },
+    { quoteNumber: 'Q-2026-0088', route: 'Brampton → New York', shipmentType: 'LTL Freight', carrier: 'XPO Logistics', service: 'Standard LTL', rate: 'C$228.75', delivery: 'Wed, May 28', quotedAt: 'Yesterday, 2:05 PM', live: false },
+    { quoteNumber: 'Q-2026-0087', route: 'Toronto → Ottawa', shipmentType: 'Parcel', carrier: 'Polaris', service: 'Ground', rate: 'C$38.50', delivery: 'Tue, May 27', quotedAt: 'May 23, 11:22 AM', live: false },
   ];
 
+  const demoBookings = [
+    { bookingNumber: 'BK-2026-0012', carrier: 'FedEx Freight', service: 'Freight Economy', route: 'Toronto → Chicago', rate: 'C$312.40', bookedAt: 'Today, 9:22 AM', status: 'confirmed' },
+    { bookingNumber: 'BK-2026-0011', carrier: 'Day & Ross', service: 'Express Saver', route: 'Mississauga → Detroit', rate: 'C$48.20', bookedAt: 'Yesterday, 3:10 PM', status: 'confirmed' },
+    { bookingNumber: 'BK-2026-0010', carrier: 'XPO Logistics', service: 'Standard LTL', route: 'Brampton → New York', rate: 'C$228.75', bookedAt: 'May 23, 2:30 PM', status: 'confirmed' },
+  ];
+
+  const demoShipments = [
+    { trackingNumber: '1Z999AA1234567890', route: 'Toronto → Chicago', carrier: 'FedEx Freight', service: 'Freight Economy', date: 'May 20', status: 'delivered' },
+    { trackingNumber: '7489234572834', route: 'Toronto → New York', carrier: 'XPO Logistics', service: 'Standard LTL', date: 'May 18', status: 'delivered' },
+    { trackingNumber: '1Z888BB9876543210', route: 'Mississauga → Detroit', carrier: 'Day & Ross', service: 'Freight Priority', date: 'May 22', status: 'in_transit' },
+    { trackingNumber: 'MAN-2026-00481', route: 'Toronto → Montreal', carrier: 'Manitoulin', service: 'Standard LTL', date: 'May 23', status: 'in_transit' },
+    { trackingNumber: 'POL-2026-00192', route: 'Brampton → Ottawa', carrier: 'Polaris', service: 'Ground', date: 'May 25', status: 'pending' },
+  ];
+
+  const displayQuotes = quotes.length ? quotes : demoQuotes;
+  const displayBookings = bookings.length ? bookings : demoBookings;
   const displayShipments = shipments.length ? shipments : demoShipments;
 
   return (
@@ -85,29 +151,128 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent shipments */}
+      {/* Recent Quotes */}
       <div className="section-card">
         <div className={s.scHeader}>
           <div>
-            <div className={s.scTitle}>Recent shipments</div>
-            <div className={s.scSub}>Your last 5 bookings</div>
+            <div className={s.scTitle}>Recent quotes</div>
+            <div className={s.scSub}>Quotes are bookable until end of day they were generated</div>
           </div>
-          <Link href="/portal/shipments" className={s.scLink}>View all &rarr;</Link>
+          <Link href="/portal/quote" className={s.scLink}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            New quote
+          </Link>
         </div>
         <div className={s.tableWrap}>
           <table>
             <thead>
-              <tr><th>Tracking #</th><th>Route</th><th>Carrier</th><th>Service</th><th>Date</th><th>Cost</th><th>Status</th></tr>
+              <tr><th>Quote #</th><th>Route</th><th>Type</th><th>Best carrier</th><th>Service</th><th>Rate</th><th>Est. delivery</th><th>Quoted at</th><th>Expires</th><th></th></tr>
+            </thead>
+            <tbody>
+              {displayQuotes.map((q, i) => {
+                const isLive = q.expiresAt ? isQuoteLive(q) : q.live;
+                const bestRate = q.rates?.[0];
+                const bookState = bestRate ? bookingAction[bestRate.id] : undefined;
+                const route = q.route || `${q.originCity || ''} → ${q.destCity || ''}`;
+                const carrier = q.carrier || bestRate?.carrierName || '—';
+                const service = q.service || bestRate?.serviceName || '—';
+                const rate = q.rate || (bestRate ? `C$${bestRate.displayRate.toFixed(2)}` : '—');
+                const delivery = q.delivery || (bestRate?.estimatedDelivery ? new Date(bestRate.estimatedDelivery).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' }) : '—');
+                const quotedAt = q.quotedAt || (q.createdAt ? formatQuoteTime(q.createdAt) : '—');
+
+                return (
+                  <tr key={i}>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}>{q.quoteNumber}</td>
+                    <td>{route}</td>
+                    <td>{q.shipmentType}</td>
+                    <td>{carrier}</td>
+                    <td>{service}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{rate}</td>
+                    <td>{delivery}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{quotedAt}</td>
+                    <td>
+                      <span className={`${s.quoteExpiry} ${isLive ? s.quoteExpiryLive : s.quoteExpiryExpired}`}>
+                        {isLive ? '● Live' : '✕ Expired'}
+                      </span>
+                    </td>
+                    <td>
+                      {bestRate && isLive ? (
+                        <button
+                          className={s.btnBookQuote}
+                          disabled={bookState === 'loading' || bookState === 'booked'}
+                          onClick={() => handleBook(q)}
+                        >
+                          {bookState === 'loading' ? '…' : bookState === 'booked' ? 'Booked ✓' : 'Book →'}
+                        </button>
+                      ) : !isLive ? (
+                        <button className={s.btnBookQuote} disabled>Expired</button>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Recent Bookings */}
+      <div className="section-card">
+        <div className={s.scHeader}>
+          <div>
+            <div className={s.scTitle}>Recent bookings</div>
+            <div className={s.scSub}>Confirmed orders awaiting carrier pickup</div>
+          </div>
+        </div>
+        <div className={s.tableWrap}>
+          <table>
+            <thead>
+              <tr><th>Booking #</th><th>Route</th><th>Carrier</th><th>Service</th><th>Rate</th><th>Booked at</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {displayBookings.map((b, i) => {
+                const route = b.route || `${b.quote?.originCity || ''} → ${b.quote?.destCity || ''}`;
+                const rate = b.rate || (b.sellRate ? `C$${b.sellRate.toFixed(2)}` : '—');
+                const bookedAt = b.bookedAt ? formatQuoteTime(b.bookedAt) : '—';
+
+                return (
+                  <tr key={i}>
+                    <td style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}>{b.bookingNumber}</td>
+                    <td>{route}</td>
+                    <td>{b.carrierName || b.carrier}</td>
+                    <td>{b.serviceName || b.service}</td>
+                    <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{rate}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{bookedAt}</td>
+                    <td><span className={`${s.statusBadge} ${getBookingStatusClass(b.status)}`}>{getBookingStatusLabel(b.status)}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Recent Shipments */}
+      <div className="section-card">
+        <div className={s.scHeader}>
+          <div>
+            <div className={s.scTitle}>Recent shipments</div>
+            <div className={s.scSub}>Tracking and delivery status</div>
+          </div>
+        </div>
+        <div className={s.tableWrap}>
+          <table>
+            <thead>
+              <tr><th>Tracking #</th><th>Route</th><th>Carrier</th><th>Service</th><th>Date</th><th>Status</th></tr>
             </thead>
             <tbody>
               {displayShipments.map((ship, i) => (
                 <tr key={i}>
                   <td style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}>{ship.trackingNumber}</td>
-                  <td>{ship.route || `${ship.originCity || ''} → ${ship.destinationCity || ''}`}</td>
+                  <td>{ship.route || `${ship.originCity || ''} → ${ship.destCity || ''}`}</td>
                   <td>{ship.carrier || ship.carrierName}</td>
                   <td>{ship.service || ship.serviceName}</td>
-                  <td>{ship.date || ship.createdAt?.split('T')[0]}</td>
-                  <td style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{ship.cost || `C$${ship.totalRate?.toFixed(2)}`}</td>
+                  <td style={{ fontSize: '12px', color: 'var(--text3)', whiteSpace: 'nowrap' }}>{ship.date || ship.bookedAt?.split('T')[0]}</td>
                   <td><span className={`${s.statusBadge} ${getStatusClass(ship.status)}`}>{getStatusLabel(ship.status)}</span></td>
                 </tr>
               ))}
