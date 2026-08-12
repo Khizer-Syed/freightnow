@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { removeToken } from '@/lib/api';
+import { usePathname } from 'next/navigation';
+import { useAuth0 } from '@auth0/auth0-react';
 import s from './Sidebar.module.css';
 
 const NAV_ITEMS = [
@@ -31,19 +31,19 @@ const ICONS = {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const { logout, user: auth0User } = useAuth0();
 
   function handleSignOut() {
-    removeToken();
-    router.push('/login');
+    logout({ logoutParams: { returnTo: window.location.origin } });
   }
 
   function getInitials(name) {
+    if (!name) return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase();
   }
 
-  // TODO: replace with real user data from context
-  const user = { name: 'John Smith', email: 'john@acmecorp.com' };
+  const userName = auth0User?.name || auth0User?.nickname || 'User';
+  const userEmail = auth0User?.email || '';
 
   return (
     <aside className={s.sidebar}>
@@ -54,9 +54,9 @@ export default function Sidebar() {
       </div>
 
       <div className={s.user}>
-        <div className={s.avatar}>{getInitials(user.name)}</div>
-        <div className={s.name}>{user.name}</div>
-        <div className={s.email}>{user.email}</div>
+        <div className={s.avatar}>{getInitials(userName)}</div>
+        <div className={s.name}>{userName}</div>
+        <div className={s.email}>{userEmail}</div>
       </div>
 
       <nav className={s.nav}>
