@@ -84,17 +84,17 @@ async function getBillingStats(userId) {
   const [monthShipments, yearShipments] = await Promise.all([
     prisma.shipment.findMany({
       where: { userId, bookedAt: { gte: startOfMonth } },
-      select: { displayRate: true },
+      select: { booking: { select: { sellRate: true } } },
     }),
     prisma.shipment.findMany({
       where: { userId, bookedAt: { gte: startOfYear } },
-      select: { displayRate: true, baseRate: true },
+      select: { booking: { select: { sellRate: true, costRate: true } } },
     }),
   ]);
 
-  const spentThisMonth = monthShipments.reduce((sum, s) => sum + s.displayRate, 0);
-  const spentThisYear = yearShipments.reduce((sum, s) => sum + s.displayRate, 0);
-  const totalSaved = yearShipments.reduce((sum, s) => sum + (s.displayRate * 0.15), 0); // Estimated savings vs list rate
+  const spentThisMonth = monthShipments.reduce((sum, s) => sum + (s.booking?.sellRate || 0), 0);
+  const spentThisYear = yearShipments.reduce((sum, s) => sum + (s.booking?.sellRate || 0), 0);
+  const totalSaved = yearShipments.reduce((sum, s) => sum + ((s.booking?.sellRate || 0) * 0.15), 0); // Estimated savings vs list rate
 
   return {
     spentThisMonth: Math.round(spentThisMonth * 100) / 100,

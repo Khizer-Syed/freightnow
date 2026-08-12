@@ -168,6 +168,54 @@
   background: var(--off-white);
 }
 
+/* Quote expiry badges */
+.quoteExpiry {
+  font-family: var(--mono);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.quoteExpiryLive {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.quoteExpiryExpired {
+  background: var(--off-white);
+  color: var(--text3);
+  text-decoration: line-through;
+}
+
+/* Book quote button */
+.btnBookQuote {
+  padding: 5px 14px;
+  background: var(--navy);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.btnBookQuote:hover {
+  background: var(--navy-dark);
+}
+
+.btnBookQuote:disabled {
+  background: var(--border);
+  color: var(--text3);
+  cursor: not-allowed;
+}
+
 /* Status badges */
 .statusBadge {
   display: inline-flex;
@@ -178,6 +226,7 @@
   font-size: 11px;
   font-weight: 600;
   font-family: var(--display);
+  white-space: nowrap;
 }
 
 .statusDelivered {
@@ -193,4 +242,14 @@
 .statusPending {
   background: var(--amber-light);
   color: var(--amber);
+}
+
+.statusConfirmed {
+  background: var(--sky);
+  color: var(--navy);
+}
+
+.statusCancelled {
+  background: var(--off-white);
+  color: var(--text3);
 }
