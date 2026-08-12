@@ -56,4 +56,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// TODO: once a staff-facing "price this spot rate" endpoint exists (PATCH /:id to set
+// quotedRate/quotedAt), gate it with requireRole(ROLES.IFF_STAFF, ROLES.IFF_ADMIN).
+
 module.exports = router;

@@ -1,31 +1,22 @@
 const prisma = require('../config/database');
 const { generateTrackingNumber } = require('../utils/trackingGenerator');
-const { NotFoundError, ValidationError } = require('../utils/errors');
-const { addBusinessDays, formatDate } = require('../utils/dateHelpers');
+const { NotFoundError } = require('../utils/errors');
 
-async function bookShipment(userId, { quoteId, rateId }) {
-  const quote = await prisma.quote.findFirst({
-    where: { id: quoteId, userId },
-    include: { rates: true },
-  });
-  if (!quote) throw new NotFoundError('Quote');
-  if (quote.status === 'expired') throw new ValidationError('This quote has expired');
-  if (quote.status === 'booked') throw new ValidationError('This quote has already been booked');
-
-  const selectedRate = quote.rates.find(r => r.id === rateId);
-  if (!selectedRate) throw new NotFoundError('Rate');
-
+// Called from booking.service.js immediately after a Booking is confirmed. Synchronous today
+// because carriers are mocked — this is the natural seam to make async once real carrier
+// booking APIs exist (e.g. deferred to a queue/webhook waiting on carrier confirmation).
+async function createShipmentForBooking(tx, booking, quote, selectedRate) {
   const trackingNumber = await generateTrackingNumber();
-  const estimatedDelivery = selectedRate.estimatedDelivery;
 
-  const shipment = await prisma.shipment.create({
+  return tx.shipment.create({
     data: {
       trackingNumber,
-      userId,
-      quoteId,
-      carrierId: selectedRate.carrierId,
-      carrierName: selectedRate.carrierName,
-      serviceName: selectedRate.serviceName,
+      userId: booking.userId,
+      companyId: booking.companyId,
+      bookingId: booking.id,
+      carrierId: booking.carrierId,
+      carrierName: booking.carrierName,
+      serviceName: booking.serviceName,
       shipmentType: quote.shipmentType,
       originCity: quote.originCity,
       originPostal: quote.originPostal,
@@ -43,10 +34,8 @@ async function bookShipment(userId, { quoteId, rateId }) {
       declaredValue: quote.declaredValue,
       commodity: quote.commodity,
       accessorials: quote.accessorials,
-      baseRate: selectedRate.baseRate,
-      displayRate: selectedRate.displayRate,
       status: 'pending',
-      estimatedDelivery,
+      estimatedDelivery: selectedRate.estimatedDelivery,
       trackingEvents: {
         create: {
           event: 'Booked',
@@ -58,11 +47,6 @@ async function bookShipment(userId, { quoteId, rateId }) {
     },
     include: { trackingEvents: true },
   });
-
-  // Mark quote as booked
-  await prisma.quote.update({ where: { id: quoteId }, data: { status: 'booked' } });
-
-  return shipment;
 }
 
 async function getUserShipments(userId, { status, page = 1, limit = 10, search } = {}) {
@@ -97,10 +81,13 @@ async function getUserShipments(userId, { status, page = 1, limit = 10, search }
 async function getShipmentById(shipmentId, userId) {
   const shipment = await prisma.shipment.findFirst({
     where: { id: shipmentId, userId },
-    include: { trackingEvents: { orderBy: { timestamp: 'desc' } } },
+    include: {
+      trackingEvents: { orderBy: { timestamp: 'desc' } },
+      booking: true,
+    },
   });
   if (!shipment) throw new NotFoundError('Shipment');
   return shipment;
 }
 
-module.exports = { bookShipment, getUserShipments, getShipmentById };
+module.exports = { createShipmentForBooking, getUserShipments, getShipmentById };

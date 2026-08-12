@@ -14,6 +14,13 @@ async function generateQuoteNumber() {
   return `Q-${year}-${seq}`;
 }
 
+async function generateBookingNumber() {
+  const year = new Date().getFullYear();
+  const count = await prisma.booking.count();
+  const seq = String(count + 1).padStart(4, '0');
+  return `BK-${year}-${seq}`;
+}
+
 async function generateClaimNumber() {
   const year = new Date().getFullYear();
   const count = await prisma.claim.count();
@@ -35,4 +42,4 @@ async function generateSpotRateNumber() {
   return `SPR-${year}-${seq}`;
 }
 
-module.exports = { generateTrackingNumber, generateQuoteNumber, generateClaimNumber, generateInvoiceNumber, generateSpotRateNumber };
+module.exports = { generateTrackingNumber, generateQuoteNumber, generateBookingNumber, generateClaimNumber, generateInvoiceNumber, generateSpotRateNumber };

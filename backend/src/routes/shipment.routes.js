@@ -1,22 +1,11 @@
 const { Router } = require('express');
-const { z } = require('zod');
-const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const shipmentService = require('../services/shipment.service');
 
 const router = Router();
 
-const bookSchema = z.object({
-  quoteId: z.string().uuid(),
-  rateId: z.string().uuid(),
-});
-
-router.post('/', authenticate, validate(bookSchema), async (req, res, next) => {
-  try {
-    const shipment = await shipmentService.bookShipment(req.user.id, req.validated);
-    res.status(201).json({ shipment });
-  } catch (err) { next(err); }
-});
+// Booking a quote now happens via POST /api/bookings (see booking.routes.js) — a Shipment
+// is created as a side effect of a confirmed Booking, not directly. This router is read-only.
 
 router.get('/', authenticate, async (req, res, next) => {
   try {
