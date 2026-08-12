@@ -4,50 +4,64 @@ Reconciled against `IFF Customer Portal Guide.md` — the client's own product s
 writing. That guide is now the authoritative source for what "done" means; this doc tracks status
 against it, plus anything it doesn't cover.
 
-**Read this first:** the guide describes an architecture that differs from what's currently built
+**Read this first:** the guide describes an architecture that differs from what's originally built
 in several places. All six of the open decisions below have now been made and are being rolled out
 as a sequence of phases (see `.claude/plans/ethereal-squishing-cascade.md` for the phasing
-rationale). Phase 1 is complete; this section tracks decision status, not just "still open."
+rationale). Phases 1 and 2 are complete; this section tracks decision status, not just "still
+open."
 
 ---
 
 ## 0. Architecture decisions — status
 
-- [x] **Database: MongoDB.** Decided. Not yet implemented — current build is still
-  Postgres/Prisma; the Mongo migration is Phase 2, deliberately done *after* the data-model changes
-  below so the model is only designed once. Local Mongo will be used until Khizer provides real
-  connection credentials.
+- [x] **Database: MongoDB.** ✅ **Done** (Phase 2, see `phase2_mongodb_migration_changes.md`).
+  Postgres/Prisma fully removed; the backend runs on MongoDB/Mongoose, with local MongoDB
+  configured as a single-node replica set for transactions. Still local-only — Khizer's real
+  connection credentials (or a hosted Atlas cluster) haven't been wired in yet.
 - [x] **Auth: Auth0.** Decided (over Firebase). Not yet implemented — current backend still hashes
   and stores passwords itself (`backend/src/services/auth.service.js`, `bcrypt` + `jsonwebtoken`).
   This is a later phase.
-- [x] **Payments: QuickBooks**, not Stripe. Decided. Not yet implemented — scaffolding will happen
-  without live credentials until a QuickBooks sandbox app is available.
+- [x] **Payments: QuickBooks**, not Stripe. Decided. Schema-only scaffolding exists (`Payment`
+  collection, Phase 2) — no live credentials or real charge flow yet.
 - [x] **FedEx compliance flow: per the guide's simpler shape.** Decided — fold EULA acceptance +
   identity verification into signup itself, drop the per-customer FedEx account number
   requirement. Not yet implemented; today's fuller `FedexConnectModal.js` / Factor 1+2 flow is
   still what's live. This is its own later phase.
 - [x] **Data model: `Booking` split from `Shipment`.** ✅ **Done** (Phase 1, see
-  `phase1_booking_and_roles_changes.md`). A `Booking` record now exists distinct from `Shipment`,
-  applied to the database and verified end-to-end.
-- [x] **Four-tier roles vs. two.** ✅ **Done** (Phase 1). `customer` / `company_admin` /
-  `iff_staff` / `iff_admin` now exist as real seeded fixtures with a `requireRole` middleware ready
-  to use. Not yet *enforced* anywhere, because the staff/admin-only routes it would gate (spot-rate
-  pricing, claims processing, markup rules) don't exist yet — see Step 8 below.
-- [ ] **Money stored as decimals, not integer cents.** Still open, not part of Phase 1. The guide
-  is explicit that money should be stored as whole cents (`$312.40` → `31240`) to avoid rounding
-  drift across thousands of invoices. Current Prisma schema still uses `Float` for all money fields
-  (now including the new `Booking.costRate`/`sellRate`). Worth fixing before real invoicing volume,
-  and easiest to do now (Phase 1's new fields included) rather than after real financial history
-  exists.
+  `phase1_booking_and_roles_changes.md`; ported to MongoDB in Phase 2). A `Booking` record exists
+  distinct from `Shipment`, verified end-to-end on both database engines.
+- [x] **Four-tier roles vs. two.** ✅ **Done** (Phase 1, ported in Phase 2). `customer` /
+  `company_admin` / `iff_staff` / `iff_admin` exist as real seeded fixtures with a `requireRole`
+  middleware ready to use. Not yet *enforced* anywhere, because the staff/admin-only routes it
+  would gate (spot-rate pricing, claims processing, markup rules) don't exist yet — see Step 8
+  below.
+- [ ] **Money stored as decimals, not integer cents.** Still open. The guide is explicit that
+  money should be stored as whole cents (`$312.40` → `31240`) to avoid rounding drift across
+  thousands of invoices. The Mongoose schemas (Phase 2) still use `Number` for every money field,
+  including the brand-new ones (`Booking.costRate`/`sellRate`, `Payment.amount`) that had no
+  legacy data to migrate — those would have been free to do as cents from day one, but were kept
+  consistent with the rest of the codebase per this item's existing "fix everywhere at once"
+  plan. Worth doing before real invoicing volume.
+
+### Also delivered in Phase 2, beyond the original 6 decisions
+
+The client's guide names 17 target collections; 6 didn't exist in any form before Phase 2:
+- [x] **`Carrier`** and **`MarkupRule`** — ✅ fully live, not just schema. Carrier
+  enabled/disabled state and the markup tier ladder are now database-driven instead of hardcoded,
+  verified against the running API.
+- [x] **`Address`** — ✅ real CRUD API (`/api/addresses`), scoped by company. No frontend UI yet.
+- [x] **`ActivityLog`** — ✅ real, wired into login, FedEx EULA acceptance, and booking creation.
+- [~] **`Payment`** and **`ClaimDocument`** — schema + minimal service only, intentionally not
+  wired into any live flow (no real QuickBooks charge or file storage to back them yet).
 
 ---
 
 ## 1. Status against the guide's own 9-step build order
 
-**Step 1 — Foundations.** Not started: no hosting account/domain pointed at `iffcargo.com`
-confirmed, no file storage service (checked — no S3/Cloudinary/multer references in the backend),
-QuickBooks account, or Auth0/Firebase account. Local Postgres exists but its role is unresolved
-per the architecture section above.
+**Step 1 — Foundations.** Local MongoDB is now running (Phase 2) as the settled database engine —
+that piece of Step 1 is no longer unresolved, just not yet hosted in production. Still not
+started: no hosting account/domain pointed at `iffcargo.com`, no file storage service (checked —
+no S3/Cloudinary/multer references in the backend), QuickBooks account, or Auth0/Firebase account.
 
 **Step 2 — Public site + accounts.** Mostly built: landing page, login, and the 3-step registration
 flow (`frontend/app/register/page.js`) exist. Sign-in/session works against the current custom
@@ -138,24 +152,32 @@ API live since March 2026) and is the reasonable first real integration.
    simplified FedEx flow, the Booking/Shipment split, and four-tier roles have all been decided.
 2. ~~Data model: split `Booking` from `Shipment`; add four-tier roles~~ — **done (Phase 1)**, see
    `phase1_booking_and_roles_changes.md`.
-3. **Next up — company-level data scoping** (small, isolated follow-up now that `companyId` is
-   denormalized onto `Booking`/`Shipment`), then **Phase 2: the Mongo migration** — porting the
-   now-settled schema (including Phase 1's changes) to MongoDB, against local/placeholder Mongo
-   until Khizer provides real credentials.
-4. Fix the PIN-logging leak — small, fast, real security issue, independent of the phased work
+3. ~~Phase 2: the Mongo migration~~ — **done**, see `phase2_mongodb_migration_changes.md`. Also
+   delivered the `Carrier`/`MarkupRule`/`Address`/`ActivityLog` collections live, and
+   `Payment`/`ClaimDocument` as ready-to-wire scaffolding.
+4. **Next up — company-level data scoping** (small, isolated follow-up now that `companyId` is
+   denormalized onto `Booking`/`Shipment` on both database engines) — still not done, carried
+   forward from Phase 1.
+5. Fix the PIN-logging leak — small, fast, real security issue, independent of the phased work
    above.
-5. Get the tax-treatment question in front of an accountant now — it has its own lead time and
+6. Get the tax-treatment question in front of an accountant now — it has its own lead time and
    blocks Step 7 regardless of engineering progress.
-6. Phase 3: Auth0 swap. Phase 4: QuickBooks integration. Phase 5: FedEx flow rework (fold EULA +
-   identity verification into signup, drop the per-customer FedEx account number).
-7. Stand up Step 1 foundations as each phase's account/credential dependency is actually needed
-   (hosting, domain, file storage).
-8. Wire up Day & Ross live rates as the first real carrier integration.
-9. Submit the FedEx Step 3 flow for approval early once its shape is settled (Phase 5) — it has its
-   own external approval timeline and blocks going live to real customers regardless of what else
-   is ready.
-10. Build out the rest of Steps 4–7 (quoting → booking/payment → post-booking → billing) against
-    the resolved architecture, confirming server-side markup enforcement as part of Step 4.
-11. Build Step 8 admin tooling — the `requireRole` mechanism and `TODO` markers are already in
-    place (Phase 1) for exactly this. Don't defer indefinitely once volume picks up.
-12. Add the remaining carriers (XPO, Manitoulin, Polaris) as each becomes available.
+7. Phase 3: Auth0 swap. Phase 4: QuickBooks integration (wiring the real charge flow behind the
+   `Payment` collection that already exists). Phase 5: FedEx flow rework (fold EULA + identity
+   verification into signup, drop the per-customer FedEx account number).
+8. Stand up remaining Step 1 foundations as each phase's account/credential dependency is
+   actually needed (hosting, domain, file storage — the last of which also unblocks wiring real
+   uploads behind the `ClaimDocument` collection).
+9. Wire up Day & Ross live rates as the first real carrier integration — the `Carrier` collection
+   built in Phase 2 makes flipping it live a data change, not a code change.
+10. Submit the FedEx Step 3 flow for approval early once its shape is settled (Phase 5) — it has
+    its own external approval timeline and blocks going live to real customers regardless of what
+    else is ready.
+11. Build out the rest of Steps 4–7 (quoting → booking/payment → post-booking → billing) against
+    the resolved architecture, confirming server-side markup enforcement as part of Step 4 (now
+    verified DB-backed and correct as of Phase 2).
+12. Build Step 8 admin tooling — the `requireRole` mechanism and `TODO` markers are already in
+    place (Phase 1), and `Carrier`/`MarkupRule` already have live data + a ready
+    `updateMarkupTier()` service function (Phase 2) waiting for a route. Don't defer indefinitely
+    once volume picks up.
+13. Add the remaining carriers (XPO, Manitoulin, Polaris) as each becomes available.

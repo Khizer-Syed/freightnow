@@ -2,6 +2,7 @@ require('dotenv').config();
 
 module.exports = {
   port: parseInt(process.env.PORT, 10) || 4000,
+  mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/iffcargo?replicaSet=rs0',
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,

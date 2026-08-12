@@ -1,12 +1,12 @@
-const prisma = require('../config/database');
+const Shipment = require('../models/Shipment');
+const TrackingEvent = require('../models/TrackingEvent');
 const { NotFoundError } = require('../utils/errors');
 
 async function getTracking(trackingNumber) {
-  const shipment = await prisma.shipment.findUnique({
-    where: { trackingNumber },
-    include: { trackingEvents: { orderBy: { timestamp: 'desc' } } },
-  });
+  const shipment = await Shipment.findOne({ trackingNumber });
   if (!shipment) throw new NotFoundError('Shipment');
+
+  const trackingEvents = await TrackingEvent.find({ shipment: shipment._id }).sort({ timestamp: -1 });
 
   const route = [shipment.originCity, shipment.destCity].filter(Boolean).join(' → ') ||
     `${shipment.originPostal} → ${shipment.destPostal}`;
@@ -20,7 +20,7 @@ async function getTracking(trackingNumber) {
     service: shipment.serviceName,
     weight: `${shipment.weight} lbs`,
     pieces: `${shipment.pieces}`,
-    events: shipment.trackingEvents.map(e => ({
+    events: trackingEvents.map(e => ({
       event: e.event,
       location: e.location,
       timestamp: e.timestamp.toISOString(),

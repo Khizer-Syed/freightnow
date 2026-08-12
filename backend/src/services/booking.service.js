@@ -1,30 +1,33 @@
-const prisma = require('../config/database');
+const mongoose = require('mongoose');
+const Booking = require('../models/Booking');
+const Quote = require('../models/Quote');
+const QuoteRate = require('../models/QuoteRate');
 const { generateBookingNumber } = require('../utils/trackingGenerator');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const shipmentService = require('./shipment.service');
+const activityLogService = require('./activityLog.service');
 
 async function createBooking(userId, { quoteId, quoteRateId, customerReference }) {
-  const quote = await prisma.quote.findFirst({
-    where: { id: quoteId, userId },
-    include: { rates: true, user: true },
-  });
+  const quote = await Quote.findOne({ _id: quoteId, user: userId }).populate('user');
   if (!quote) throw new NotFoundError('Quote');
   if (quote.status === 'expired') throw new ValidationError('This quote has expired');
   if (quote.status === 'booked') throw new ValidationError('This quote has already been booked');
 
-  const selectedRate = quote.rates.find(r => r.id === quoteRateId);
+  const selectedRate = await QuoteRate.findOne({ _id: quoteRateId, quote: quote._id });
   if (!selectedRate) throw new NotFoundError('Rate');
 
   const bookingNumber = await generateBookingNumber();
 
-  return prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.create({
-      data: {
+  const session = await mongoose.startSession();
+  try {
+    let result;
+    await session.withTransaction(async () => {
+      const [booking] = await Booking.create([{
         bookingNumber,
-        quoteId,
-        quoteRateId,
-        userId,
-        companyId: quote.user.companyId,
+        quote: quote._id,
+        quoteRate: selectedRate._id,
+        user: userId,
+        company: quote.user.company,
         carrierId: selectedRate.carrierId,
         carrierName: selectedRate.carrierName,
         serviceName: selectedRate.serviceName,
@@ -32,20 +35,27 @@ async function createBooking(userId, { quoteId, quoteRateId, customerReference }
         sellRate: selectedRate.displayRate,
         currency: quote.currency,
         customerReference,
-      },
+      }], { session });
+
+      await Quote.updateOne({ _id: quote._id }, { status: 'booked' }, { session });
+
+      const shipment = await shipmentService.createShipmentForBooking(session, booking, quote, selectedRate);
+
+      result = { booking, shipment };
     });
-
-    await tx.quote.update({ where: { id: quoteId }, data: { status: 'booked' } });
-
-    const shipment = await shipmentService.createShipmentForBooking(tx, booking, quote, selectedRate);
-
-    return { booking, shipment };
-  });
+    activityLogService.logActivity(userId, quote.user.company, 'booking_created', {
+      bookingId: result.booking.id,
+      bookingNumber: result.booking.bookingNumber,
+    });
+    return result;
+  } finally {
+    session.endSession();
+  }
 }
 
 async function getUserBookings(userId, { status, page = 1, limit = 10 } = {}) {
   const skip = (page - 1) * limit;
-  const where = { userId };
+  const where = { user: userId };
   if (status && status !== 'all') where.status = status;
 
   const [bookings, total] = await Promise.all([
@@ -63,10 +73,7 @@ async function getUserBookings(userId, { status, page = 1, limit = 10 } = {}) {
 }
 
 async function getBookingById(bookingId, userId) {
-  const booking = await prisma.booking.findFirst({
-    where: { id: bookingId, userId },
-    include: { shipment: true },
-  });
+  const booking = await Booking.findOne({ _id: bookingId, user: userId }).populate('shipment');
   if (!booking) throw new NotFoundError('Booking');
   return booking;
 }

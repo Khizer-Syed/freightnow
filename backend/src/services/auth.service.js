@@ -1,8 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const prisma = require('../config/database');
+const User = require('../models/User');
+const Company = require('../models/Company');
+const TwoFactorCode = require('../models/TwoFactorCode');
 const config = require('../config/env');
 const emailService = require('./email.service');
+const activityLogService = require('./activityLog.service');
 const { AuthenticationError, ConflictError, NotFoundError } = require('../utils/errors');
 
 const OTP_EXPIRY_MINUTES = 10;
@@ -10,43 +13,41 @@ const OTP_MAX_ATTEMPTS = 5;
 const OTP_PURPOSE = 'login-2fa';
 
 async function register({ firstName, lastName, email, phone, password, company }) {
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await User.findOne({ email });
   if (existing) {
     throw new ConflictError('An account with this email already exists');
   }
 
   const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
 
-  const user = await prisma.user.create({
-    data: {
-      firstName,
-      lastName,
-      email,
-      phone,
-      passwordHash,
-      company: company ? {
-        create: {
-          name: company.name,
-          country: company.country,
-          province: company.province,
-          city: company.city,
-          postalCode: company.postalCode,
-          shippingType: company.shippingType,
-        },
-      } : undefined,
-      notifications: {
-        create: {},
-      },
-    },
-    include: { company: true },
+  let companyDoc = null;
+  if (company) {
+    companyDoc = await Company.create({
+      name: company.name,
+      country: company.country,
+      province: company.province,
+      city: company.city,
+      postalCode: company.postalCode,
+      shippingType: company.shippingType,
+    });
+  }
+
+  const user = await User.create({
+    firstName,
+    lastName,
+    email,
+    phone,
+    passwordHash,
+    company: companyDoc ? companyDoc._id : undefined,
   });
+  if (companyDoc) await user.populate('company');
 
   const token = generateToken(user);
   return { user: sanitizeUser(user), token };
 }
 
 async function login({ email, password }) {
-  const user = await prisma.user.findUnique({ where: { email }, include: { company: true } });
+  const user = await User.findOne({ email }).populate('company');
   if (!user) {
     throw new AuthenticationError('Invalid email or password');
   }
@@ -64,10 +65,7 @@ async function login({ email, password }) {
 async function verifyLoginOtp({ pendingToken, code }) {
   const user = await getUserFromPendingToken(pendingToken);
 
-  const otp = await prisma.twoFactorCode.findFirst({
-    where: { userId: user.id, consumedAt: null },
-    orderBy: { createdAt: 'desc' },
-  });
+  const otp = await TwoFactorCode.findOne({ user: user._id, consumedAt: null }).sort({ createdAt: -1 });
 
   if (!otp || otp.expiresAt < new Date()) {
     throw new AuthenticationError('This code has expired. Please request a new one.');
@@ -78,14 +76,16 @@ async function verifyLoginOtp({ pendingToken, code }) {
 
   const valid = await bcrypt.compare(code, otp.codeHash);
   if (!valid) {
-    const attempts = otp.attempts + 1;
-    await prisma.twoFactorCode.update({ where: { id: otp.id }, data: { attempts } });
-    throw new AuthenticationError(`That code didn't match. ${OTP_MAX_ATTEMPTS - attempts} attempt(s) remaining.`);
+    otp.attempts += 1;
+    await otp.save();
+    throw new AuthenticationError(`That code didn't match. ${OTP_MAX_ATTEMPTS - otp.attempts} attempt(s) remaining.`);
   }
 
-  await prisma.twoFactorCode.update({ where: { id: otp.id }, data: { consumedAt: new Date() } });
+  otp.consumedAt = new Date();
+  await otp.save();
 
   const token = generateToken(user);
+  activityLogService.logActivity(user._id, user.company?._id || user.company, 'login', {});
   return { user: sanitizeUser(user), token };
 }
 
@@ -95,16 +95,13 @@ async function resendLoginOtp({ pendingToken }) {
 }
 
 async function issueAndSendOtp(user) {
-  await prisma.twoFactorCode.updateMany({
-    where: { userId: user.id, consumedAt: null },
-    data: { consumedAt: new Date() },
-  });
+  await TwoFactorCode.updateMany({ user: user._id, consumedAt: null }, { consumedAt: new Date() });
 
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const codeHash = await bcrypt.hash(code, config.bcryptRounds);
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-  await prisma.twoFactorCode.create({ data: { userId: user.id, codeHash, expiresAt } });
+  await TwoFactorCode.create({ user: user._id, codeHash, expiresAt });
   emailService.sendOtpEmail(user, code);
 }
 
@@ -119,7 +116,7 @@ async function getUserFromPendingToken(pendingToken) {
     throw new AuthenticationError('Invalid or expired session. Please log in again.');
   }
 
-  const user = await prisma.user.findUnique({ where: { id: payload.sub }, include: { company: true } });
+  const user = await User.findById(payload.sub).populate('company');
   if (!user) throw new NotFoundError('User');
   return user;
 }
@@ -129,7 +126,7 @@ function generatePendingToken(user) {
 }
 
 async function changePassword(userId, { currentPassword, newPassword }) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await User.findById(userId);
   if (!user) throw new NotFoundError('User');
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
@@ -137,30 +134,29 @@ async function changePassword(userId, { currentPassword, newPassword }) {
     throw new AuthenticationError('Current password is incorrect');
   }
 
-  const passwordHash = await bcrypt.hash(newPassword, config.bcryptRounds);
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  user.passwordHash = await bcrypt.hash(newPassword, config.bcryptRounds);
+  await user.save();
 }
 
 async function getMe(userId) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { company: true, notifications: true },
-  });
+  const user = await User.findById(userId).populate('company');
   if (!user) throw new NotFoundError('User');
   return sanitizeUser(user);
 }
 
 function generateToken(user) {
+  const companyId = user.company ? (user.company._id || user.company).toString() : null;
   return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role },
+    { sub: user.id, email: user.email, role: user.role, companyId },
     config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
   );
 }
 
 function sanitizeUser(user) {
-  const { passwordHash, ...rest } = user;
-  return rest;
+  const obj = user.toObject({ virtuals: true });
+  delete obj.passwordHash;
+  return obj;
 }
 
 module.exports = { register, login, verifyLoginOtp, resendLoginOtp, changePassword, getMe };

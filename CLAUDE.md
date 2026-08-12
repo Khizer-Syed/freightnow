@@ -34,15 +34,15 @@ IFF Cargo is a freight forwarding platform that compares shipping rates from 5 C
 │   └── public/
 │       ├── logo.svg, logo-white.svg, logo.png
 ├── backend/                        # Node.js + Express API (port 4000)
-│   ├── src/
-│   │   ├── index.js               # Express app
-│   │   ├── carriers/              # Carrier adapter pattern (5 adapters)
-│   │   ├── services/              # Business logic
-│   │   ├── routes/                # API route handlers
-│   │   ├── middleware/            # Auth, validation, error handling
-│   │   └── utils/                 # Helpers
-│   └── prisma/
-│       ├── schema.prisma          # Database models (PostgreSQL)
+│   └── src/
+│       ├── index.js               # Express app
+│       ├── carriers/              # Carrier adapter pattern (5 adapters)
+│       ├── models/                # Mongoose schemas/models (one file per collection)
+│       ├── services/              # Business logic
+│       ├── routes/                # API route handlers
+│       ├── middleware/            # Auth, validation, error handling
+│       ├── utils/                 # Helpers
+│       ├── scripts/dropDatabase.js
 │       └── seed.js                # Demo data
 └── APIs/                           # Carrier API documentation (PDFs)
 ```
@@ -56,13 +56,19 @@ npm run dev              # Start dev server on port 3000
 
 ## Running the Backend
 ```bash
-# 1. Start PostgreSQL (must be running before the backend)
-brew services start postgresql@17
+# 1. Start MongoDB (must be running before the backend)
+brew services start mongodb-community@6.0
+# One-time only, on a fresh machine: MongoDB needs to run as a (single-node) replica set
+# so multi-document transactions work (used by booking/quote creation). Add to
+# /opt/homebrew/etc/mongod.conf:
+#   replication:
+#     replSetName: rs0
+# then `brew services restart mongodb-community@6.0` and run once:
+mongosh --eval "rs.initiate()"
 
 # 2. Start the backend
 cd backend
 npm install              # Install dependencies (first time only)
-npm run db:migrate       # Run Prisma migrations (first time or after schema changes)
 npm run db:seed          # Seed demo data (first time only)
 npm run dev              # Start server on port 4000 (with nodemon auto-reload)
 ```
@@ -70,7 +76,7 @@ npm run dev              # Start server on port 4000 (with nodemon auto-reload)
 ## Running Both Together
 ```bash
 # Terminal 1: Backend (must be started first)
-brew services start postgresql@17
+brew services start mongodb-community@6.0
 cd backend && npm run dev
 
 # Terminal 2: Frontend
@@ -82,8 +88,8 @@ Then open http://localhost:3000 in your browser.
 ```bash
 # Stop the frontend: Ctrl+C in the terminal running frontend npm run dev
 # Stop the backend: Ctrl+C in the terminal running backend npm run dev
-# Stop PostgreSQL:
-brew services stop postgresql@17
+# Stop MongoDB:
+brew services stop mongodb-community@6.0
 ```
 
 ## Demo Credentials
@@ -93,8 +99,8 @@ brew services stop postgresql@17
 
 ## Tech Stack
 - **Frontend:** Next.js 16 (App Router), React, CSS Modules
-- **Backend:** Node.js, Express, Prisma ORM
-- **Database:** PostgreSQL 17 (via Homebrew)
+- **Backend:** Node.js, Express, Mongoose ODM
+- **Database:** MongoDB 6.0 (via Homebrew, running as a single-node replica set for transactions)
 - **Auth:** JWT + bcrypt (token stored in localStorage), plus a mandatory email-OTP second factor after password login
 - **Validation:** Zod
 - **Fonts:** Outfit (display), DM Sans (body), JetBrains Mono (mono)
@@ -122,93 +128,114 @@ brew services stop postgresql@17
 | `/portal/profile` | Personal info, company info, change password, **Connect FedEx Account** (EULA + Factor 1/2 MFA) |
 | `/portal/billing` | Payment methods, invoices table, spending stats |
 
-## Database (PostgreSQL)
-- **Engine:** PostgreSQL 17 (installed via Homebrew)
+## Database (MongoDB)
+- **Engine:** MongoDB 6.0 (installed via Homebrew), running as a single-node replica set
+  (`rs0`) — required for the multi-document transactions used in booking/quote creation.
 - **Database name:** `iffcargo`
-- **Connection string:** `postgresql://Naghmeh.Dezhabad%40MLSE.com@localhost:5432/iffcargo`
-- **ORM:** Prisma (schema at `backend/prisma/schema.prisma`)
-- **Start PostgreSQL:** `brew services start postgresql@17`
-- **Stop PostgreSQL:** `brew services stop postgresql@17`
-- **View data visually:** `cd backend && npm run db:studio` (opens Prisma Studio in browser)
-- **Reset database:** `cd backend && npm run db:reset` (drops all tables, re-migrates, requires re-seed)
+- **Connection string:** `mongodb://localhost:27017/iffcargo?replicaSet=rs0` (the
+  `?replicaSet=rs0` is required, not optional — without it the driver won't route
+  transactions correctly)
+- **ODM:** Mongoose (schemas at `backend/src/models/*.js`, one file per collection)
+- **Start MongoDB:** `brew services start mongodb-community@6.0`
+- **Stop MongoDB:** `brew services stop mongodb-community@6.0`
+- **View data visually:** `mongosh iffcargo` (CLI), or install **MongoDB Compass**
+  (`brew install --cask mongodb-compass`) for a GUI — there's no built-in equivalent to
+  Prisma Studio, so no `db:studio` script exists anymore.
+- **Reset database:** `cd backend && npm run db:reset` (drops the database, re-seeds)
 - **Re-seed data:** `cd backend && npm run db:seed`
-- **PATH note:** PostgreSQL binaries are at `/opt/homebrew/opt/postgresql@17/bin` — add to PATH if you need `psql` directly
-- **Direct access:** `export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH" && psql iffcargo`
+- **No migrations:** MongoDB is schemaless — there's no `db:migrate` step. Schema
+  validation and indexes come from each model file's Mongoose schema declaration and are
+  applied automatically the first time the app connects.
 
-### Why PostgreSQL
-- Data is highly relational (users → quotes → rates → shipments → tracking → invoices)
-- ACID transactions for booking (creates records in multiple tables atomically)
-- Handles complex filtering queries (shipments by status, date range, carrier)
-- Financial data (rates, invoices) requires consistency guarantees
-- Scales to millions of records without architecture changes
+### Why MongoDB
+Per the client's Customer Portal Guide, which specifies MongoDB as the target database.
+Reasons that hold up given how this app is actually used:
+- The data model keeps growing new, loosely-related collections as external integrations
+  land in phases (Address, Payment, ClaimDocument, Carrier, MarkupRule, ActivityLog) —
+  a flexible schema suits that better than a rigid one needing a migration per addition.
+- Mongoose sessions (`mongoose.startSession()` + `session.withTransaction(...)`) still give
+  the atomicity guarantees the app actually needs (Booking+Shipment, Quote+QuoteRate) once
+  running as a replica set — losing nothing on that front versus Postgres.
+- Several records (embedded `NotificationPreference` on `User`, embedded `InvoiceItem[]` on
+  `Invoice`) are always fetched together with their parent and never queried independently —
+  a natural fit for embedded documents rather than a join.
+- Scales horizontally without an architecture change.
 
-## Database Schema (13 tables)
+## Database Schema (22 collections)
 
 ### Users & Companies
-| Table | What it stores |
+| Collection | What it stores |
 |-------|---------------|
-| **User** | id, email, passwordHash, firstName, lastName, phone, role (`customer`/`admin`), companyId |
+| **User** | email, passwordHash, firstName, lastName, phone, role (`customer`/`company_admin`/`iff_staff`/`iff_admin`), company (ref), embedded `notifications` (shipmentBooked, outForDelivery, delivered, exceptions, spotRates, claims, promotional) |
 | **Company** | name, country, province, city, postalCode, shippingType |
-| **NotificationPreference** | Per-user toggles (shipmentBooked, outForDelivery, delivered, exceptions, spotRates, claims, promotional) |
+| **Address** | Saved address book, shared across a company — company (ref), createdBy, contactName, companyName, phone, street/city/province/postalCode/country, isResidential, isVerified |
 
 ### Quoting
-| Table | What it stores |
+| Collection | What it stores |
 |-------|---------------|
 | **Quote** | quoteNumber, shipmentType, origin/dest (city, postal, country), weight, pieces, dimensions, freightClass, currency, pickupDate, declaredValue, commodity, accessorials, status, expiresAt |
-| **QuoteRate** | One row per carrier result — carrierId, carrierName, serviceName, baseRate (cost), displayRate (marked up), transitDays, estimatedDelivery, isLiveRate, isBestRate |
-
-### Shipments & Tracking
-| Table | What it stores |
-|-------|---------------|
-| **Shipment** | trackingNumber, linked to user + quote, carrier info, full origin/dest details, weight/pieces/dims, baseRate, displayRate, status (`pending`/`in_transit`/`delivered`), estimatedDelivery, actualDelivery |
-| **TrackingEvent** | Per-shipment timeline — event name, location, timestamp, description |
-
-### Claims
-| Table | What it stores |
-|-------|---------------|
-| **Claim** | claimNumber, trackingNumber, carrier, claimType, shipmentDate, amountClaimed, commodity, description, notes, documents, status (`open`/`in_progress`/`resolved`) |
-
-### Billing
-| Table | What it stores |
-|-------|---------------|
-| **PaymentMethod** | type (visa/mastercard), last4 digits, expiry, isDefault |
-| **Invoice** | invoiceNumber, totalAmount, currency, status (`pending`/`paid`), issuedAt, paidAt |
-| **InvoiceItem** | Line items per invoice — linked to shipment, description, amount |
-
-### Spot Rates
-| Table | What it stores |
-|-------|---------------|
+| **QuoteRate** | One doc per carrier result — quote (ref), carrierId, carrierName, serviceName, baseRate (cost), displayRate (marked up), transitDays, estimatedDelivery, isLiveRate, isBestRate |
 | **SpotRateRequest** | For FTL/air/ocean quotes needing manual pricing — requestNumber, shipment details, origin/dest ports (ocean), commodity, specialNotes, status, quotedRate, quotedAt |
 
-### FedEx Integrator Compliance
-| Table | What it stores |
+### Shipping
+| Collection | What it stores |
 |-------|---------------|
-| **FedexAccountConnection** | A customer's own FedEx account connection — fedexAccountNumber, shippingAddress (JSON), eulaAcceptedAt, status (`awaiting_factor2`/`verified`/`failed`/`locked`), factor2Method (`pin_email`/`pin_sms`/`pin_call`/`invoice`), pinCodeHash + pinExpiresAt, attempts, lockedUntil (24h lockout after 5 failed attempts), mocked childKey/childSecret once verified |
+| **Booking** | The commercial record — bookingNumber, quote + quoteRate (ref), user, company (snapshot), carrier info, costRate/sellRate (frozen at booking time), currency, customerReference, paymentStatus, status, pickup confirmation |
+| **Shipment** | The physical record — trackingNumber, user, company (snapshot), booking (ref), carrier info, full origin/dest details, weight/pieces/dims, status (`pending`/`in_transit`/`delivered`), estimatedDelivery, actualDelivery |
+| **TrackingEvent** | Per-shipment timeline — shipment (ref), event name, location, timestamp, description |
+
+### Claims
+| Collection | What it stores |
+|-------|---------------|
+| **Claim** | claimNumber, trackingNumber, carrier, claimType, shipmentDate, amountClaimed, commodity, description, notes, documents, status (`open`/`under_review`/`approved`/`closed`) |
+| **ClaimDocument** | Evidence pointers (not the files themselves) — claim (ref), uploadedBy, documentType, fileName, mimeType, fileSizeBytes, storageKey. Schema-only scaffolding — no real file storage/upload exists yet. |
+
+### Money
+| Collection | What it stores |
+|-------|---------------|
+| **PaymentMethod** | type (visa/mastercard), last4 digits, expiry, isDefault |
+| **Payment** | One doc per charge attempt — booking (ref), user, amount, currency, qbTransactionId, status (`pending`/`succeeded`/`failed`/`refunded`), failureReason. Schema-only scaffolding — no real QuickBooks integration exists yet. |
+| **Invoice** | invoiceNumber, totalAmount, currency, status (`pending`/`paid`), issuedAt, paidAt, embedded `items` (description, amount, shipment ref) |
+
+### FedEx Integrator Compliance
+| Collection | What it stores |
+|-------|---------------|
+| **FedexAccountConnection** | A customer's own FedEx account connection — fedexAccountNumber, embedded shippingAddress, eulaAcceptedAt, status (`awaiting_factor2`/`verified`/`failed`/`locked`), factor2Method (`pin_email`/`pin_sms`/`pin_call`/`invoice`), pinCodeHash + pinExpiresAt, attempts, lockedUntil (24h lockout after 5 failed attempts), mocked childKey/childSecret once verified |
 
 ### Auth / Security
-| Table | What it stores |
+| Collection | What it stores |
 |-------|---------------|
 | **TwoFactorCode** | Login second factor — bcrypt-hashed 6-digit codeHash, expiresAt (10 min), attempts, consumedAt |
+
+### Carriers & Pricing
+| Collection | What it stores |
+|-------|---------------|
+| **Carrier** | carrierId, name, enabled, providesLiveRates, shipmentTypes, credentialsRef — data-driven policy layered on top of the unchanged `backend/src/carriers/*.adapter.js` code |
+| **MarkupRule** | minAmount, maxAmount, markupMultiplier, effectiveFrom/effectiveTo, isActive — old tiers are retired (not overwritten) when changed, so historical quotes stay explainable |
+
+### Operational
+| Collection | What it stores |
+|-------|---------------|
+| **ActivityLog** | user, company, action, details (Mixed) — written via `activityLog.service.js`'s `logActivity()`, called on login, FedEx EULA acceptance, booking creation, and markup-rule changes |
 
 ### Relationships
 ```
 User → Company (many-to-one)
-User → Quotes → QuoteRates (one-to-many)
-User → Shipments → TrackingEvents (one-to-many)
-User → Claims
-User → PaymentMethods
-User → Invoices → InvoiceItems → Shipment
+Company → Addresses, Bookings
+User → Quotes → QuoteRates
+User → Bookings → Shipment → TrackingEvents
+User → Claims → ClaimDocuments
+User → PaymentMethods, Payments
+User → Invoices (embedded InvoiceItems)
 User → SpotRateRequests
-User → FedexAccountConnections
-User → TwoFactorCodes
-Quote → Shipment (one-to-one, when booked)
+User → FedexAccountConnections, TwoFactorCodes
+Quote → Booking (one-to-one, when booked) → Shipment (one-to-one, once carrier confirms)
 ```
 
 ### Not yet in DB (needed for production)
-- Stripe customer ID / payment intent ID (for payments)
-- Carrier API credentials storage
-- Audit log (who did what, when)
-- Rate cache table
+- Real QuickBooks charge flow behind the `Payment` collection (schema exists, not wired up)
+- Real file storage behind the `ClaimDocument` collection (schema exists, not wired up)
+- Real carrier API credentials storage (`Carrier.credentialsRef` is a pointer, not the secret)
 - Email verification status
 - Password reset tokens
 
@@ -222,8 +249,9 @@ Quote → Shipment (one-to-one, when booked)
 | `POST /api/auth/login` | Login step 1 — verifies password, emails a 6-digit code, returns `{twoFactorRequired, pendingToken}` (no JWT yet) |
 | `POST /api/auth/verify-otp` | Login step 2 — verifies the code, returns the real JWT |
 | `POST /api/auth/resend-otp` | Resend the login verification code |
-| `POST /api/shipments` | Book a shipment from a quote |
-| `GET /api/shipments` | List user shipments (filter: ?status=in_transit) |
+| `POST /api/bookings` | Book a quote (creates a Booking + the resulting Shipment) |
+| `GET /api/bookings` | List user bookings |
+| `GET /api/shipments` | List user shipments (filter: ?status=in_transit) — read-only; booking happens via `/api/bookings` |
 | `GET /api/tracking/:number` | Track a shipment |
 | `POST /api/claims` | Submit a cargo claim |
 | `GET /api/claims` | List user claims |
@@ -237,6 +265,8 @@ Quote → Shipment (one-to-one, when booked)
 | `POST /api/fedex-account/:id/factor2/verify-pin` | Verify the PIN code |
 | `POST /api/fedex-account/:id/factor2/verify-invoice` | Verify via FedEx invoice details |
 | `DELETE /api/fedex-account/:id` | Disconnect a FedEx account |
+| `GET/POST /api/addresses` | List / create saved company addresses |
+| `PUT/DELETE /api/addresses/:id` | Update / delete a saved address |
 
 ## Carrier Adapter Pattern
 Each carrier is in `backend/src/carriers/<name>.adapter.js` implementing a common interface:
@@ -267,6 +297,8 @@ After a correct password, login requires a 6-digit email code before a session J
 - Logic lives in `backend/src/services/auth.service.js` (`login`, `verifyLoginOtp`, `resendLoginOtp`).
 
 ## Markup Engine (backend/src/services/markup.service.js)
+DB-backed via the `MarkupRule` collection (not hardcoded) — `applyMarkup()` queries the
+active tiers. The current tiers, seeded by `backend/src/seed.js`:
 ```
 ≤$100  → ×1.70 (70% markup)
 ≤$250  → ×1.55 (55% markup)
@@ -275,20 +307,20 @@ After a correct password, login requires a 6-digit email code before a session J
 ≤$2500 → ×1.20 (20% markup)
 >$2500 → ×1.15 (15% markup)
 ```
+Changing a tier retires the old row (`isActive: false`, `effectiveTo` set) and inserts a new
+one rather than overwriting it, via `markup.service.js`'s `updateMarkupTier()` — not yet
+exposed on a route (no admin UI built yet), but the service function is ready.
 
 ## Production Deployment
 
 ### Database Options for Production
 | Provider | Free Tier | Paid | Best For |
 |----------|-----------|------|----------|
-| **Neon** | 512MB, scales to zero | $19/mo | Serverless PostgreSQL, cheapest to start |
-| **Supabase** | 500MB, 2 projects | $25/mo | Built-in auth, dashboard, real-time |
-| **Railway** | 1GB, $5 credit/mo | Usage-based | Simplest — deploy backend + DB together |
-| **Render** | No free DB | $7/mo | Pairs with Render backend hosting |
-| **DigitalOcean** | None | $15/mo | Reliable, daily backups included |
-| **AWS RDS** | 12 months free tier | $15-50/mo | Enterprise-grade, most configurable |
-| **Google Cloud SQL** | $300 credit (90 days) | $10-40/mo | Google ecosystem |
-| **Azure Database** | $200 credit (30 days) | $15-50/mo | Microsoft ecosystem |
+| **MongoDB Atlas** | 512MB shared cluster | $9-57/mo | Purpose-built for MongoDB — managed replica sets out of the box, cheapest/simplest to start |
+| **Railway** | 1GB, $5 credit/mo | Usage-based | Self-hosted Mongo container alongside the backend, deploy together |
+| **DigitalOcean Managed MongoDB** | None | $15/mo | Reliable, daily backups included |
+| **AWS DocumentDB** | None | $15-50/mo | MongoDB-compatible, AWS ecosystem |
+| **Azure Cosmos DB (Mongo API)** | $200 credit (30 days) | $25-50/mo | Microsoft ecosystem, MongoDB-compatible |
 
 ### Backend Hosting Options
 | Provider | Cost | Notes |
@@ -302,30 +334,29 @@ After a correct password, login requires a 6-digit email code before a session J
 ### Recommended Deployment Strategy
 | Stage | Setup |
 |-------|-------|
-| **Now (development)** | Local PostgreSQL + `npm run dev` |
-| **MVP / first deploy** | **Railway** (backend + database together, no code changes) |
-| **Growing / production** | **Vercel** (frontend CDN) + **Neon** (database) + **Railway** (backend API) |
+| **Now (development)** | Local MongoDB (single-node replica set) + `npm run dev` |
+| **MVP / first deploy** | **MongoDB Atlas** (managed replica set, free tier to start) + **Railway** (backend) |
+| **Growing / production** | **Vercel** (frontend CDN) + **MongoDB Atlas** (database) + **Railway** (backend API) |
 
 ### Switching to Production Database
 No code changes needed — just update `.env`:
 ```env
 # Local (current)
-DATABASE_URL="postgresql://Naghmeh.Dezhabad%40MLSE.com@localhost:5432/iffcargo"
+MONGODB_URI="mongodb://localhost:27017/iffcargo?replicaSet=rs0"
 
-# Production examples:
-# Neon:
-DATABASE_URL="postgresql://user:pass@ep-cool-name-123.us-east-2.aws.neon.tech/iffcargo?sslmode=require"
-# Supabase:
-DATABASE_URL="postgresql://postgres:yourpassword@db.xxxx.supabase.co:5432/postgres"
-# Railway:
-DATABASE_URL="postgresql://postgres:pass@containers-us-west-123.railway.app:5432/railway"
+# Production example (MongoDB Atlas):
+MONGODB_URI="mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/iffcargo?retryWrites=true&w=majority"
 ```
-Then run `npm run db:migrate` against the production database.
+Atlas clusters are already provisioned as replica sets, so transactions work without any
+extra setup — no `replicaSet=rs0` param needed against Atlas (the `mongodb+srv://` scheme
+handles that). No migration step to run — Mongoose builds indexes automatically on connect.
 
 ### Why Not Convex?
 Convex is an all-in-one backend platform (database + functions + auth in TypeScript). Not recommended for IFF because:
-- Would require rewriting the entire backend from scratch
-- Document-style DB is awkward for our heavily relational data (quotes → rates → shipments → events → invoices)
+- Would require rewriting the entire backend from scratch (moving from MongoDB/Mongoose to
+  Convex's own document store and function model is still a full rewrite, not a lighter
+  lift just because both are document-oriented — the query/mutation model, deployment
+  model, and auth integration are all different)
 - Vendor lock-in — can't move without rewriting
 - Charges per function call — rate comparison is API-call-heavy
 

@@ -1,11 +1,13 @@
+const mongoose = require('mongoose');
 const { getAllCarriers, getCarrier } = require('../carriers');
 const { applyMarkup } = require('./markup.service');
-const prisma = require('../config/database');
+const Quote = require('../models/Quote');
+const QuoteRate = require('../models/QuoteRate');
 const { generateQuoteNumber } = require('../utils/trackingGenerator');
 const { endOfDay } = require('../utils/dateHelpers');
 
 async function getAllRates(params, userId) {
-  const carriers = getAllCarriers();
+  const carriers = await getAllCarriers();
 
   const results = await Promise.allSettled(
     carriers.map(async (carrier) => {
@@ -27,11 +29,11 @@ async function getAllRates(params, userId) {
   }
 
   // Apply markup and sort
-  const processedRates = allRates.map(r => ({
+  const processedRates = await Promise.all(allRates.map(async (r) => ({
     ...r,
     baseRate: r.rate,
-    displayRate: applyMarkup(r.rate),
-  }));
+    displayRate: await applyMarkup(r.rate),
+  })));
   processedRates.sort((a, b) => a.displayRate - b.displayRate);
 
   // Mark best rate
@@ -48,11 +50,13 @@ async function getAllRates(params, userId) {
     quoteNumber = await generateQuoteNumber();
     expiresAt = endOfDay(new Date());
 
-    const quote = await prisma.$transaction(async (tx) => {
-      const createdQuote = await tx.quote.create({
-        data: {
+    const session = await mongoose.startSession();
+    try {
+      let createdQuote;
+      await session.withTransaction(async () => {
+        [createdQuote] = await Quote.create([{
           quoteNumber,
-          userId,
+          user: userId,
           shipmentType: params.shipmentType,
           originCity: params.origin.city,
           originPostal: params.origin.postalCode || '',
@@ -72,15 +76,12 @@ async function getAllRates(params, userId) {
           commodity: params.commodity,
           accessorials: params.accessorials ? JSON.stringify(params.accessorials) : null,
           expiresAt,
-        },
-      });
+        }], { session });
 
-      // Created individually (rather than a nested `rates: { create: [...] }`) so each
-      // QuoteRate's id can be captured and returned to the client — needed to book a
-      // specific rate via POST /api/bookings.
-      const createdRates = await Promise.all(processedRates.map(r => tx.quoteRate.create({
-        data: {
-          quoteId: createdQuote.id,
+        // Created individually (rather than one nested write) so each QuoteRate's id can be
+        // captured and returned to the client — needed to book a specific rate via POST /api/bookings.
+        const createdRates = await Promise.all(processedRates.map(r => QuoteRate.create([{
+          quote: createdQuote._id,
           carrierId: r.carrierId,
           carrierName: r.carrierName,
           serviceName: r.serviceName,
@@ -90,14 +91,14 @@ async function getAllRates(params, userId) {
           estimatedDelivery: r.deliveryDate,
           isLiveRate: r.isLive || false,
           isBestRate: r.isBestRate || false,
-        },
-      })));
+        }], { session }).then(([doc]) => doc)));
 
-      processedRates.forEach((r, i) => { r.quoteRateId = createdRates[i].id; });
-
-      return createdQuote;
-    });
-    quoteId = quote.id;
+        processedRates.forEach((r, i) => { r.quoteRateId = createdRates[i].id; });
+      });
+      quoteId = createdQuote.id;
+    } finally {
+      session.endSession();
+    }
   }
 
   return {
@@ -121,16 +122,16 @@ async function getAllRates(params, userId) {
 }
 
 async function getSingleCarrierRate(carrierId, params) {
-  const carrier = getCarrier(carrierId);
+  const carrier = await getCarrier(carrierId);
   if (!carrier) return null;
 
   const rates = await carrier.getRates(params);
-  return rates.map(r => ({
-    rate: applyMarkup(r.rate),
+  return Promise.all(rates.map(async (r) => ({
+    rate: await applyMarkup(r.rate),
     serviceName: r.serviceName,
     transitDays: r.transitDays,
     deliveryDate: r.deliveryDate,
-  }));
+  })));
 }
 
 module.exports = { getAllRates, getSingleCarrierRate };
