@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { isLoggedIn } from '@/lib/api';
+import { usePathname } from 'next/navigation';
+import { useAuth0 } from '@auth0/auth0-react';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
 import s from './layout.module.css';
@@ -17,14 +17,22 @@ const PAGE_TITLES = {
 };
 
 export default function PortalLayout({ children }) {
-  const router = useRouter();
   const pathname = usePathname();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.push('/login');
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect();
     }
-  }, [router]);
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   const title = PAGE_TITLES[pathname] || 'Portal';
 

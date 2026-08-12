@@ -1,7 +1,17 @@
 const API_URL = 'http://localhost:4000';
 
+// Token getter — set by AuthBridge when user is authenticated
+let tokenGetter = null;
+
+export function setTokenGetter(fn) {
+  tokenGetter = fn;
+}
+
 export async function fetchAPI(path, options = {}) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  let token = null;
+  if (tokenGetter) {
+    try { token = await tokenGetter(); } catch (e) { /* silent */ }
+  }
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -13,21 +23,4 @@ export async function fetchAPI(path, options = {}) {
   const data = await res.json();
   if (!res.ok) throw data;
   return data;
-}
-
-export function getToken() {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('token');
-}
-
-export function setToken(token) {
-  localStorage.setItem('token', token);
-}
-
-export function removeToken() {
-  localStorage.removeItem('token');
-}
-
-export function isLoggedIn() {
-  return !!getToken();
 }

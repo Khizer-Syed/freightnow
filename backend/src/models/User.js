@@ -15,7 +15,8 @@ const notificationPreferenceSchema = new Schema({
 
 const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
-  passwordHash: { type: String, required: true },
+  auth0Id: { type: String, unique: true, sparse: true },
+  passwordHash: { type: String },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   phone: String,

@@ -6,6 +6,8 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,
+  auth0Domain: process.env.AUTH0_DOMAIN,
+  auth0Audience: process.env.AUTH0_AUDIENCE,
   carriers: {
     fedex: {
       apiKey: process.env.FEDEX_API_KEY,
