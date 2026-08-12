@@ -11,7 +11,7 @@ function authenticate(req, res, next) {
   const token = header.slice(7);
   try {
     const payload = jwt.verify(token, jwtSecret);
-    req.user = { id: payload.sub, email: payload.email, role: payload.role };
+    req.user = { id: payload.sub, email: payload.email, role: payload.role, companyId: payload.companyId };
     next();
   } catch {
     next(new AuthenticationError('Invalid or expired token'));
@@ -26,7 +26,7 @@ function optionalAuth(req, res, next) {
   const token = header.slice(7);
   try {
     const payload = jwt.verify(token, jwtSecret);
-    req.user = { id: payload.sub, email: payload.email, role: payload.role };
+    req.user = { id: payload.sub, email: payload.email, role: payload.role, companyId: payload.companyId };
   } catch {
     // Ignore invalid token for optional auth
   }

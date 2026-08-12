@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const config = require('./config/env');
+const { connectDB } = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
 const routes = require('./routes');
 const { getAllCarriers } = require('./carriers');
@@ -15,16 +16,18 @@ app.use(cors({
 app.use(express.json());
 
 // Health check
-app.get('/health', (req, res) => {
-  const carriers = {};
-  for (const carrier of getAllCarriers()) {
-    carriers[carrier.id] = true;
-  }
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    carriers,
-  });
+app.get('/health', async (req, res, next) => {
+  try {
+    const carriers = {};
+    for (const carrier of await getAllCarriers()) {
+      carriers[carrier.id] = true;
+    }
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      carriers,
+    });
+  } catch (err) { next(err); }
 });
 
 // API routes
@@ -33,8 +36,13 @@ app.use('/api', routes);
 // Error handler
 app.use(errorHandler);
 
-app.listen(config.port, () => {
-  console.log(`IFF Cargo backend running on port ${config.port}`);
-});
+async function start() {
+  await connectDB();
+  app.listen(config.port, () => {
+    console.log(`IFF Cargo backend running on port ${config.port}`);
+  });
+}
+
+start();
 
 module.exports = app;

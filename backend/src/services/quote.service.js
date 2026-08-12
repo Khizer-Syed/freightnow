@@ -1,51 +1,53 @@
-const prisma = require('../config/database');
+const Quote = require('../models/Quote');
+const QuoteRate = require('../models/QuoteRate');
 const { NotFoundError } = require('../utils/errors');
 
 async function getUserQuotes(userId, { page = 1, limit = 10 } = {}) {
   const skip = (page - 1) * limit;
 
   // Mark expired quotes
-  await prisma.quote.updateMany({
-    where: { userId, status: 'active', expiresAt: { lt: new Date() } },
-    data: { status: 'expired' },
-  });
+  await Quote.updateMany(
+    { user: userId, status: 'active', expiresAt: { $lt: new Date() } },
+    { status: 'expired' }
+  );
 
   const [quotes, total] = await Promise.all([
-    prisma.quote.findMany({
-      where: { userId },
-      include: { rates: { orderBy: { displayRate: 'asc' } } },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.quote.count({ where: { userId } }),
+    Quote.find({ user: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Quote.countDocuments({ user: userId }),
   ]);
 
-  return { quotes, pagination: { page, limit, total } };
+  const withRates = await Promise.all(quotes.map(async (quote) => {
+    const rates = await QuoteRate.find({ quote: quote._id }).sort({ displayRate: 1 });
+    const obj = quote.toObject({ virtuals: true });
+    obj.rates = rates;
+    return obj;
+  }));
+
+  return { quotes: withRates, pagination: { page, limit, total } };
 }
 
 async function getQuoteById(quoteId, userId) {
-  const quote = await prisma.quote.findFirst({
-    where: { id: quoteId, userId },
-    include: { rates: { orderBy: { displayRate: 'asc' } } },
-  });
+  const quote = await Quote.findOne({ _id: quoteId, user: userId });
   if (!quote) throw new NotFoundError('Quote');
 
   // Update expiry status
   if (quote.status === 'active' && new Date() > quote.expiresAt) {
-    await prisma.quote.update({ where: { id: quoteId }, data: { status: 'expired' } });
     quote.status = 'expired';
+    await quote.save();
   }
 
-  return quote;
+  const rates = await QuoteRate.find({ quote: quote._id }).sort({ displayRate: 1 });
+  const obj = quote.toObject({ virtuals: true });
+  obj.rates = rates;
+  return obj;
 }
 
 async function deleteQuote(quoteId, userId) {
-  const quote = await prisma.quote.findFirst({ where: { id: quoteId, userId } });
+  const quote = await Quote.findOne({ _id: quoteId, user: userId });
   if (!quote) throw new NotFoundError('Quote');
 
-  await prisma.quoteRate.deleteMany({ where: { quoteId } });
-  await prisma.quote.delete({ where: { id: quoteId } });
+  await QuoteRate.deleteMany({ quote: quote._id });
+  await Quote.deleteOne({ _id: quote._id });
 }
 
 module.exports = { getUserQuotes, getQuoteById, deleteQuote };

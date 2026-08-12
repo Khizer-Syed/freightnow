@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const prisma = require('../config/database');
+const FedexAccountConnection = require('../models/FedexAccountConnection');
 const config = require('../config/env');
+const activityLogService = require('./activityLog.service');
 const { ValidationError, NotFoundError, AuthenticationError } = require('../utils/errors');
 
 const PIN_EXPIRY_MINUTES = 10;
@@ -15,15 +16,15 @@ async function startConnection(userId, { fedexAccountNumber, address, eulaAccept
     throw new ValidationError('You must accept the FedEx EULA before connecting a FedEx account.');
   }
 
-  const connection = await prisma.fedexAccountConnection.create({
-    data: {
-      userId,
-      fedexAccountNumber,
-      shippingAddress: JSON.stringify(address),
-      eulaAcceptedAt: new Date(),
-      status: 'awaiting_factor2',
-    },
+  const connection = await FedexAccountConnection.create({
+    user: userId,
+    fedexAccountNumber,
+    shippingAddress: address,
+    eulaAcceptedAt: new Date(),
+    status: 'awaiting_factor2',
   });
+
+  activityLogService.logActivity(userId, null, 'fedex_eula_accepted', { connectionId: connection.id });
 
   return sanitize(connection);
 }
@@ -33,11 +34,9 @@ async function startFactor2(userId, connectionId, method) {
   assertNotLocked(connection);
 
   if (method === 'invoice') {
-    const updated = await prisma.fedexAccountConnection.update({
-      where: { id: connectionId },
-      data: { factor2Method: method },
-    });
-    return sanitize(updated);
+    connection.factor2Method = method;
+    await connection.save();
+    return sanitize(connection);
   }
 
   // pin_email | pin_sms | pin_call
@@ -47,12 +46,13 @@ async function startFactor2(userId, connectionId, method) {
 
   console.log(`[DEV FEDEX PIN] connection ${connectionId} via ${method}: ${code} (expires in ${PIN_EXPIRY_MINUTES} min)`);
 
-  const updated = await prisma.fedexAccountConnection.update({
-    where: { id: connectionId },
-    data: { factor2Method: method, pinCodeHash, pinExpiresAt, attempts: 0 },
-  });
+  connection.factor2Method = method;
+  connection.pinCodeHash = pinCodeHash;
+  connection.pinExpiresAt = pinExpiresAt;
+  connection.attempts = 0;
+  await connection.save();
 
-  return sanitize(updated);
+  return sanitize(connection);
 }
 
 async function verifyPin(userId, connectionId, code) {
@@ -87,20 +87,17 @@ async function verifyInvoice(userId, connectionId, { invoiceNumber, invoiceDate,
 }
 
 async function listConnections(userId) {
-  const connections = await prisma.fedexAccountConnection.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-  });
+  const connections = await FedexAccountConnection.find({ user: userId }).sort({ createdAt: -1 });
   return connections.map(sanitize);
 }
 
 async function disconnect(userId, connectionId) {
-  await getOwnedConnection(userId, connectionId);
-  await prisma.fedexAccountConnection.delete({ where: { id: connectionId } });
+  const connection = await getOwnedConnection(userId, connectionId);
+  await FedexAccountConnection.deleteOne({ _id: connection._id });
 }
 
 async function getOwnedConnection(userId, connectionId) {
-  const connection = await prisma.fedexAccountConnection.findFirst({ where: { id: connectionId, userId } });
+  const connection = await FedexAccountConnection.findOne({ _id: connectionId, user: userId });
   if (!connection) throw new NotFoundError('FedEx account connection');
   return connection;
 }
@@ -112,49 +109,39 @@ function assertNotLocked(connection) {
 }
 
 async function recordFailedAttempt(connection, reasonMessage) {
-  const attempts = connection.attempts + 1;
+  connection.attempts += 1;
 
-  if (attempts >= MAX_ATTEMPTS) {
-    const locked = await prisma.fedexAccountConnection.update({
-      where: { id: connection.id },
-      data: { attempts, status: 'locked', lockedUntil: new Date(Date.now() + LOCKOUT_HOURS * 60 * 60 * 1000) },
-    });
+  if (connection.attempts >= MAX_ATTEMPTS) {
+    connection.status = 'locked';
+    connection.lockedUntil = new Date(Date.now() + LOCKOUT_HOURS * 60 * 60 * 1000);
+    await connection.save();
     const err = new AuthenticationError(LOCKED_MESSAGE);
-    err.details = { connection: sanitize(locked) };
+    err.details = { connection: sanitize(connection) };
     throw err;
   }
 
-  const updated = await prisma.fedexAccountConnection.update({
-    where: { id: connection.id },
-    data: { attempts },
-  });
-  const err = new AuthenticationError(`${reasonMessage} ${MAX_ATTEMPTS - attempts} attempt(s) remaining.`);
-  err.details = { connection: sanitize(updated) };
+  await connection.save();
+  const err = new AuthenticationError(`${reasonMessage} ${MAX_ATTEMPTS - connection.attempts} attempt(s) remaining.`);
+  err.details = { connection: sanitize(connection) };
   throw err;
 }
 
 async function finalizeVerification(connection) {
-  const childKey = `child_${crypto.randomBytes(12).toString('hex')}`;
-  const childSecret = crypto.randomBytes(24).toString('hex');
+  connection.status = 'verified';
+  connection.verifiedAt = new Date();
+  connection.childKey = `child_${crypto.randomBytes(12).toString('hex')}`;
+  connection.childSecret = crypto.randomBytes(24).toString('hex');
+  connection.pinCodeHash = null;
+  connection.pinExpiresAt = null;
+  await connection.save();
 
-  const updated = await prisma.fedexAccountConnection.update({
-    where: { id: connection.id },
-    data: {
-      status: 'verified',
-      verifiedAt: new Date(),
-      childKey,
-      childSecret,
-      pinCodeHash: null,
-      pinExpiresAt: null,
-    },
-  });
-
-  return sanitize(updated);
+  return sanitize(connection);
 }
 
 function sanitize(connection) {
-  const { pinCodeHash, childSecret, ...rest } = connection;
-  return { ...rest, shippingAddress: JSON.parse(rest.shippingAddress), hasChildSecret: !!childSecret };
+  const obj = connection.toObject({ virtuals: true });
+  const { pinCodeHash, childSecret, ...rest } = obj;
+  return { ...rest, hasChildSecret: !!childSecret };
 }
 
 module.exports = { startConnection, startFactor2, verifyPin, verifyInvoice, listConnections, disconnect };

@@ -3,12 +3,13 @@ const { z } = require('zod');
 const validate = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const bookingService = require('../services/booking.service');
+const { objectId } = require('../utils/validators');
 
 const router = Router();
 
 const bookSchema = z.object({
-  quoteId: z.string().uuid(),
-  quoteRateId: z.string().uuid(),
+  quoteId: objectId(),
+  quoteRateId: objectId(),
   customerReference: z.string().optional(),
 });
 

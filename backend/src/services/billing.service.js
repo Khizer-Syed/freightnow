@@ -1,77 +1,57 @@
-const prisma = require('../config/database');
+const PaymentMethod = require('../models/PaymentMethod');
+const Invoice = require('../models/Invoice');
+const Booking = require('../models/Booking');
 const { NotFoundError } = require('../utils/errors');
 
 async function getPaymentMethods(userId) {
-  return prisma.paymentMethod.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-  });
+  return PaymentMethod.find({ user: userId }).sort({ createdAt: -1 });
 }
 
 async function addPaymentMethod(userId, data) {
-  // If setting as default, unset existing defaults
   if (data.isDefault) {
-    await prisma.paymentMethod.updateMany({
-      where: { userId, isDefault: true },
-      data: { isDefault: false },
-    });
+    await PaymentMethod.updateMany({ user: userId, isDefault: true }, { isDefault: false });
   }
 
-  return prisma.paymentMethod.create({
-    data: {
-      userId,
-      type: data.type,
-      last4: data.last4,
-      expiryMonth: data.expiryMonth,
-      expiryYear: data.expiryYear,
-      isDefault: data.isDefault || false,
-    },
+  return PaymentMethod.create({
+    user: userId,
+    type: data.type,
+    last4: data.last4,
+    expiryMonth: data.expiryMonth,
+    expiryYear: data.expiryYear,
+    isDefault: data.isDefault || false,
   });
 }
 
 async function setDefault(paymentMethodId, userId) {
-  const method = await prisma.paymentMethod.findFirst({ where: { id: paymentMethodId, userId } });
+  const method = await PaymentMethod.findOne({ _id: paymentMethodId, user: userId });
   if (!method) throw new NotFoundError('Payment method');
 
-  await prisma.paymentMethod.updateMany({
-    where: { userId, isDefault: true },
-    data: { isDefault: false },
-  });
+  await PaymentMethod.updateMany({ user: userId, isDefault: true }, { isDefault: false });
 
-  return prisma.paymentMethod.update({
-    where: { id: paymentMethodId },
-    data: { isDefault: true },
-  });
+  method.isDefault = true;
+  await method.save();
+  return method;
 }
 
 async function deletePaymentMethod(paymentMethodId, userId) {
-  const method = await prisma.paymentMethod.findFirst({ where: { id: paymentMethodId, userId } });
+  const method = await PaymentMethod.findOne({ _id: paymentMethodId, user: userId });
   if (!method) throw new NotFoundError('Payment method');
-  await prisma.paymentMethod.delete({ where: { id: paymentMethodId } });
+  await PaymentMethod.deleteOne({ _id: method._id });
 }
 
 async function getInvoices(userId, { page = 1, limit = 10 } = {}) {
   const skip = (page - 1) * limit;
 
   const [invoices, total] = await Promise.all([
-    prisma.invoice.findMany({
-      where: { userId },
-      include: { items: true },
-      orderBy: { issuedAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.invoice.count({ where: { userId } }),
+    Invoice.find({ user: userId }).sort({ issuedAt: -1 }).skip(skip).limit(limit),
+    Invoice.countDocuments({ user: userId }),
   ]);
 
   return { invoices, pagination: { page, limit, total } };
 }
 
 async function getInvoiceById(invoiceId, userId) {
-  const invoice = await prisma.invoice.findFirst({
-    where: { id: invoiceId, userId },
-    include: { items: true },
-  });
+  const invoice = await Invoice.findOne({ _id: invoiceId, user: userId });
   if (!invoice) throw new NotFoundError('Invoice');
   return invoice;
 }
@@ -81,24 +61,19 @@ async function getBillingStats(userId) {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  const [monthShipments, yearShipments] = await Promise.all([
-    prisma.shipment.findMany({
-      where: { userId, bookedAt: { gte: startOfMonth } },
-      select: { displayRate: true },
-    }),
-    prisma.shipment.findMany({
-      where: { userId, bookedAt: { gte: startOfYear } },
-      select: { displayRate: true, baseRate: true },
-    }),
+  // Money lives on Booking (costRate/sellRate), not Shipment — sourced from there.
+  const [monthBookings, yearBookings] = await Promise.all([
+    Booking.find({ user: userId, bookedAt: { $gte: startOfMonth } }).select('sellRate'),
+    Booking.find({ user: userId, bookedAt: { $gte: startOfYear } }).select('sellRate costRate'),
   ]);
 
-  const spentThisMonth = monthShipments.reduce((sum, s) => sum + s.displayRate, 0);
-  const spentThisYear = yearShipments.reduce((sum, s) => sum + s.displayRate, 0);
-  const totalSaved = yearShipments.reduce((sum, s) => sum + (s.displayRate * 0.15), 0); // Estimated savings vs list rate
+  const spentThisMonth = monthBookings.reduce((sum, b) => sum + b.sellRate, 0);
+  const spentThisYear = yearBookings.reduce((sum, b) => sum + b.sellRate, 0);
+  const totalSaved = yearBookings.reduce((sum, b) => sum + (b.sellRate * 0.15), 0); // Estimated savings vs list rate
 
   return {
     spentThisMonth: Math.round(spentThisMonth * 100) / 100,
-    shipmentsThisMonth: monthShipments.length,
+    shipmentsThisMonth: monthBookings.length,
     spentThisYear: Math.round(spentThisYear * 100) / 100,
     totalSaved: Math.round(totalSaved * 100) / 100,
   };

@@ -1,43 +1,48 @@
-const prisma = require('../config/database');
+const Shipment = require('../models/Shipment');
+const Quote = require('../models/Quote');
+const Booking = require('../models/Booking');
+const Claim = require('../models/Claim');
+const Invoice = require('../models/Invoice');
+const SpotRateRequest = require('../models/SpotRateRequest');
 
 async function generateTrackingNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.shipment.count();
+  const count = await Shipment.countDocuments();
   const seq = String(count + 1).padStart(5, '0');
   return `IFF-${year}-${seq}`;
 }
 
 async function generateQuoteNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.quote.count();
+  const count = await Quote.countDocuments();
   const seq = String(count + 1).padStart(4, '0');
   return `Q-${year}-${seq}`;
 }
 
 async function generateBookingNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.booking.count();
+  const count = await Booking.countDocuments();
   const seq = String(count + 1).padStart(4, '0');
   return `BK-${year}-${seq}`;
 }
 
 async function generateClaimNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.claim.count();
+  const count = await Claim.countDocuments();
   const seq = String(count + 1).padStart(4, '0');
   return `CLM-${year}-${seq}`;
 }
 
 async function generateInvoiceNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.invoice.count();
+  const count = await Invoice.countDocuments();
   const seq = String(count + 1).padStart(4, '0');
   return `INV-${year}-${seq}`;
 }
 
 async function generateSpotRateNumber() {
   const year = new Date().getFullYear();
-  const count = await prisma.spotRateRequest.count();
+  const count = await SpotRateRequest.countDocuments();
   const seq = String(count + 1).padStart(4, '0');
   return `SPR-${year}-${seq}`;
 }
