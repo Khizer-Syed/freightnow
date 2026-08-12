@@ -67,8 +67,14 @@ async function getUserShipments(userId, { status, page = 1, limit = 10, search }
   }
 
   const [shipments, total] = await Promise.all([
-    Shipment.find(where).sort({ bookedAt: -1 }).skip(skip).limit(limit),
-    Shipment.countDocuments(where),
+    prisma.shipment.findMany({
+      where,
+      orderBy: { bookedAt: 'desc' },
+      skip,
+      take: limit,
+      include: { booking: { select: { bookingNumber: true, sellRate: true } } },
+    }),
+    prisma.shipment.count({ where }),
   ]);
 
   return { shipments, pagination: { page, limit, total } };

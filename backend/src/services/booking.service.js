@@ -59,8 +59,14 @@ async function getUserBookings(userId, { status, page = 1, limit = 10 } = {}) {
   if (status && status !== 'all') where.status = status;
 
   const [bookings, total] = await Promise.all([
-    Booking.find(where).sort({ bookedAt: -1 }).skip(skip).limit(limit),
-    Booking.countDocuments(where),
+    prisma.booking.findMany({
+      where,
+      orderBy: { bookedAt: 'desc' },
+      skip,
+      take: limit,
+      include: { quote: { select: { originCity: true, originPostal: true, destCity: true, destPostal: true, shipmentType: true } } },
+    }),
+    prisma.booking.count({ where }),
   ]);
 
   return { bookings, pagination: { page, limit, total } };
