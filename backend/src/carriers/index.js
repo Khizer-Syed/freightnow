@@ -5,9 +5,10 @@ const manitoulin = require('./manitoulin.adapter');
 const polaris = require('./polaris.adapter');
 const dhl = require('./dhl.adapter');
 const csa = require('./csa.adapter');
+const estes = require('./estes.adapter');
 const Carrier = require('../models/Carrier');
 
-const carriers = { fedex, xpo, dayross, manitoulin, polaris, dhl, csa };
+const carriers = { fedex, xpo, dayross, manitoulin, polaris, dhl, csa, estes };
 
 // The adapters above hold the (mocked) capability code — how to talk to each carrier.
 // The Carrier collection holds policy — whether one is switched on right now. Keeping them

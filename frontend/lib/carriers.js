@@ -6,6 +6,7 @@ export const CARRIERS = [
   { id: 'polaris', name: 'Polaris', abbr: 'POL', bg: '#f5f3ff', color: '#5521b5', bc: '#ddd6fe' },
   { id: 'dhl', name: 'DHL Express', abbr: 'DHL', bg: '#fef9c3', color: '#d4002a', bc: '#fde68a' },
   { id: 'csa', name: 'CSA Transportation', abbr: 'CSA', bg: '#e8f0fe', color: '#003d7a', bc: '#a8c7fa' },
+  { id: 'estes', name: 'Estes Express', abbr: 'EST', bg: '#fff7ed', color: '#c2410c', bc: '#fed7aa' },
 ];
 
 export function getCarrier(id) {
