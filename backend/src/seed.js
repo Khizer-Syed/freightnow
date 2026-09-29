@@ -33,6 +33,7 @@ async function main() {
     { carrierId: 'polaris', name: 'Polaris', shipmentTypes: ['ltl'], credentialsRef: 'env:POLARIS_API_KEY' },
     { carrierId: 'dhl', name: 'DHL Express', shipmentTypes: ['envelope', 'parcel'], credentialsRef: 'env:DHL_USERNAME' },
     { carrierId: 'csa', name: 'CSA Transportation', shipmentTypes: ['ltl'], credentialsRef: 'env:CSA_USERNAME' },
+    { carrierId: 'estes', name: 'Estes Express', shipmentTypes: ['ltl'], credentialsRef: 'env:ESTES_API_KEY' },
   ];
   for (const c of carrierDefs) {
     await Carrier.create({ ...c, enabled: true, providesLiveRates: false });
