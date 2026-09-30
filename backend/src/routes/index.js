@@ -14,6 +14,7 @@ const addressRoutes = require('./address.routes');
 const quickbooksRoutes = require('./quickbooks.routes');
 const addressValidationRoutes = require('./addressValidation.routes');
 const pricingRulesRoutes = require('./pricingRules.routes');
+const pricingAdminRoutes = require('./pricingAdmin.routes');
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/addresses', addressRoutes);
 router.use('/quickbooks', quickbooksRoutes);
 router.use('/address-validation', addressValidationRoutes);
 router.use('/pricing-rules', pricingRulesRoutes);
+router.use('/admin/pricing', pricingAdminRoutes);
 
 module.exports = router;

@@ -43,6 +43,13 @@ router.get('/active', authenticate, requireRole(ROLES.IFF_ADMIN), async (req, re
   } catch (err) { next(err); }
 });
 
+router.get('/history', authenticate, requireRole(ROLES.IFF_ADMIN), async (req, res, next) => {
+  try {
+    const history = await pricingRulesService.listRuleSetHistory();
+    res.json({ history });
+  } catch (err) { next(err); }
+});
+
 router.post('/', authenticate, requireRole(ROLES.IFF_ADMIN), validate(publishSchema), async (req, res, next) => {
   try {
     const ruleSet = await pricingRulesService.publishRuleSet(req.user.id, req.validated);
@@ -51,3 +58,4 @@ router.post('/', authenticate, requireRole(ROLES.IFF_ADMIN), validate(publishSch
 });
 
 module.exports = router;
+module.exports.publishSchema = publishSchema;

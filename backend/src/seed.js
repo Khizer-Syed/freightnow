@@ -18,6 +18,7 @@ const Payment = require('./models/Payment');
 const ClaimDocument = require('./models/ClaimDocument');
 
 const bookingService = require('./services/booking.service');
+const { priceQuote } = require('./services/pricingEngine.service');
 const activityLogService = require('./services/activityLog.service');
 
 async function main() {
@@ -244,6 +245,11 @@ async function main() {
     });
   }
 
+  // Pricing history for the admin Pricing page — ~12 months of engine-priced quote options
+  // across several customer companies, some adjusted by IFF (discounts / competitive matches),
+  // some booked. Without this the calibration report would show "no data" on a fresh seed.
+  await seedPricingHistory(user);
+
   // Exercise the real ActivityLog helper end-to-end.
   await activityLogService.logActivity(user._id, company._id, 'login', { seeded: true });
 
@@ -252,6 +258,91 @@ async function main() {
   console.log('Company admin: jane@acmecorp.com / demo1234');
   console.log('IFF staff:     staff@iffcargo.com / staff1234');
   console.log('IFF admin:     admin@iffcargo.com / admin1234');
+}
+
+async function seedPricingHistory(acmeUser) {
+  const ruleSet = await PricingRuleSet.findOne({ active: true });
+  const admin = await User.findOne({ role: 'iff_admin' });
+  const extraCompanies = [
+    { name: 'Northwind Imports', city: 'Mississauga', province: 'Ontario', postalCode: 'L4W 5K6' },
+    { name: 'Maple Leaf Parts', city: 'Montreal', province: 'Quebec', postalCode: 'H2X 1Y4' },
+    { name: 'Prairie Supply Co', city: 'Calgary', province: 'Alberta', postalCode: 'T2P 1J9' },
+  ];
+  const customers = [acmeUser];
+  const passwordHash = await bcrypt.hash('demo1234', 12);
+  for (const [i, c] of extraCompanies.entries()) {
+    const company = await Company.create({ ...c, country: 'CA' });
+    customers.push(await User.create({
+      email: `buyer${i + 1}@${c.name.toLowerCase().replace(/[^a-z]/g, '')}.com`, passwordHash,
+      firstName: 'Demo', lastName: c.name.split(' ')[0], role: 'customer', company: company._id,
+    }));
+  }
+
+  // Deterministic pseudo-random so every reseed produces the same report.
+  let seed = 42;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const carriers = [['polaris', 'Polaris', 'Cross-Border LTL'], ['csa', 'CSA Transportation', 'LTL Consolidated'], ['dayross', 'Day & Ross', 'Standard LTL'], ['estes', 'Estes Express', 'LTL Standard Transit']];
+  const lanes = [['Toronto', 'M5V3A8', 'CA', 'Chicago', '60601', 'US', 'xb'], ['Montreal', 'H2X1Y4', 'CA', 'Vancouver', 'V6B2W2', 'CA', 'dom'], ['Calgary', 'T2P1J9', 'CA', 'Toronto', 'M5V3A8', 'CA', 'dom'], ['Mississauga', 'L4W5K6', 'CA', 'Detroit', '48201', 'US', 'xb']];
+  const reasons = ['discount', 'competitive', 'discount', 'other'];
+
+  for (let n = 1; n <= 110; n++) {
+    const createdAt = new Date(Date.now() - Math.floor(rand() * 330) * 86400000);
+    const customer = customers[Math.floor(rand() * customers.length)];
+    const [oc, op, oco, dc, dp, dco, scope] = lanes[Math.floor(rand() * lanes.length)];
+    const weight = Math.round(100 + rand() * 1900);
+    const pieces = 1 + Math.floor(rand() * 4);
+    const quote = await Quote.create({
+      quoteNumber: `Q-HIST-${String(n).padStart(4, '0')}`, user: customer._id, shipmentType: 'ltl',
+      originCity: oc, originPostal: op, originCountry: oco, destCity: dc, destPostal: dp, destCountry: dco,
+      weight, pieces, dimL: 48, dimW: 40, dimH: 40, currency: 'CAD',
+      expiresAt: createdAt, status: 'expired', createdAt,
+    });
+
+    const options = carriers.filter(() => rand() > 0.35);
+    const rates = [];
+    for (const [carrierId, carrierName, serviceName] of (options.length ? options : [carriers[0]])) {
+      // Cost spread across all bands, from small courier-sized costs up to large LTL moves.
+      const cost = Math.round(Math.exp(Math.log(25) + rand() * Math.log(2500 / 25)) * 100) / 100;
+      // Realistic mode for the cost level: small costs are envelopes/parcels, not freight.
+      const [mode, packaging, line] = cost < 60
+        ? ['courier', 'Envelope', { qty: 1, l: 12, w: 9, h: 1, wt: 1 }]
+        : cost < 180
+          ? ['courier', 'Package', { qty: 1, l: 18, w: 14, h: 12, wt: 5 + Math.round(rand() * 40) }]
+          : ['ltl', 'Skid', { qty: pieces, l: 48, w: 40, h: 40, wt: weight / pieces }];
+      const priced = priceQuote({ cost, scope, mode, packaging, currency: 'CAD', lines: [line] }, ruleSet);
+      const rate = {
+        quote: quote._id, carrierId, carrierName, serviceName, baseRate: cost,
+        displayRate: priced.sell, engineRate: priced.sell, transitDays: 2 + Math.floor(rand() * 4),
+        isLiveRate: true, rulesVersion: priced.rulesVersion, markupPct: priced.markupPct,
+        grossMargin: priced.grossMargin, costCad: priced.costCad, sellCad: priced.sellCad, fxRate: priced.fxRate,
+        chargeableWt: priced.chargeableWt, densityPcf: priced.densityPcf, estClass: priced.estClass, flags: priced.flags,
+      };
+      if (rand() < 0.3) {
+        const pct = 5 + Math.floor(rand() * 20);
+        rate.displayRate = Math.max(cost + 10, Math.round(priced.sell * (1 - pct / 100) * 100) / 100);
+        rate.grossMargin = Math.round((rate.displayRate - cost) * 100) / 100;
+        rate.adjustedBy = admin?._id;
+        rate.adjustedAt = createdAt;
+        rate.adjustmentReason = reasons[Math.floor(rand() * reasons.length)];
+        rate.adjustmentNote = `Seeded ${pct}% adjustment`;
+      }
+      rates.push(rate);
+    }
+    rates.sort((a, b) => a.displayRate - b.displayRate);
+    rates[0].isBestRate = true;
+    const created = await QuoteRate.insertMany(rates);
+
+    if (rand() < 0.3) {
+      const chosen = created[0];
+      await Booking.create({
+        bookingNumber: `BK-HIST-${String(n).padStart(4, '0')}`, quote: quote._id, quoteRate: chosen._id,
+        user: customer._id, company: customer.company, carrierId: chosen.carrierId, carrierName: chosen.carrierName,
+        serviceName: chosen.serviceName, costRate: chosen.baseRate, sellRate: chosen.displayRate,
+        currency: 'CAD', status: 'confirmed', paymentStatus: 'paid', bookedAt: createdAt,
+      });
+      await Quote.updateOne({ _id: quote._id }, { status: 'booked' });
+    }
+  }
 }
 
 main()
