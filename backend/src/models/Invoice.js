@@ -6,6 +6,7 @@ const { Schema } = mongoose;
 // field), not a separate table.
 const invoiceItemSchema = new Schema({
   shipment: { type: Schema.Types.ObjectId, ref: 'Shipment' },
+  booking: { type: Schema.Types.ObjectId, ref: 'Booking' },
   description: { type: String, required: true },
   amount: { type: Number, required: true },
 });

@@ -60,4 +60,9 @@ async function publishRuleSet(actingUserId, { bands, adjusters, floors, dim_divi
   return created;
 }
 
-module.exports = { getActiveRuleSet, publishRuleSet };
+async function listRuleSetHistory(limit = 20) {
+  return PricingRuleSet.find().sort({ version: -1 }).limit(limit)
+    .populate('createdBy', 'email firstName lastName');
+}
+
+module.exports = { getActiveRuleSet, publishRuleSet, listRuleSetHistory };

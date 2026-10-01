@@ -15,6 +15,7 @@ const PAGE_TITLES = {
   '/portal/claims': 'Claims',
   '/portal/profile': 'Profile',
   '/portal/billing': 'Billing',
+  '/portal/admin/pricing': 'Pricing Admin',
 };
 
 export default function PortalLayout({ children }) {

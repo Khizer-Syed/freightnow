@@ -19,6 +19,22 @@ const bookingSchema = new Schema({
   pickupConfirmationNumber: String,
   pickupConfirmedAt: Date,
   cancelledAt: Date,
+
+  // IFF price overrides made after booking. sellRate always holds the current agreed price;
+  // originalSellRate keeps what the customer booked at. balanceAdjustment is what's still owed
+  // either way once a paid booking is repriced: negative = credit owed to the customer,
+  // positive = extra to collect. Settling it (refund / extra charge) is a manual step for now —
+  // there's no automatic QuickBooks refund.
+  originalSellRate: Number,
+  balanceAdjustment: { type: Number, default: 0 },
+  priceAdjustments: [{
+    from: Number,
+    to: Number,
+    reason: String,
+    note: String,
+    by: { type: Schema.Types.ObjectId, ref: 'User' },
+    at: Date,
+  }],
 }, { timestamps: { createdAt: 'bookedAt', updatedAt: 'updatedAt' } });
 
 module.exports = mongoose.model('Booking', bookingSchema);

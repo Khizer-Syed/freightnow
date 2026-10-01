@@ -23,6 +23,7 @@ async function createInvoiceForBooking(booking, companyId, userId) {
     status: booking.paymentStatus === 'paid' ? 'paid' : 'pending',
     paidAt: booking.paymentStatus === 'paid' ? new Date() : undefined,
     items: [{
+      booking: booking._id,
       description: `${booking.carrierName} ${booking.serviceName} — Booking ${booking.bookingNumber}`,
       amount: booking.sellRate,
     }],

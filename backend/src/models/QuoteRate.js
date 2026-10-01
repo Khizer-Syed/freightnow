@@ -29,6 +29,19 @@ const quoteRateSchema = new Schema({
   estClass: Number,
   dimGoverns: Boolean,
   flags: [String],
+
+  // Manual price adjustment by IFF (discount / competitive match / correction). displayRate
+  // always holds the price the customer sees and books; engineRate keeps what the pricing
+  // engine originally produced, so the adjustment stays visible and calibration can compare
+  // achieved markup against the rules.
+  engineRate: Number,
+  adjustedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  adjustedAt: Date,
+  adjustmentReason: {
+    type: String,
+    enum: ['discount', 'competitive', 'contract', 'oneoff', 'correction', 'other'],
+  },
+  adjustmentNote: String,
 });
 
 module.exports = mongoose.model('QuoteRate', quoteRateSchema);

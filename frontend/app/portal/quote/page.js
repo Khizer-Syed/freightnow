@@ -245,7 +245,6 @@ export default function QuotePage() {
       // result gets silently replaced with fabricated data.
       quoteResults = (data.rates || []).map(r => ({
         carrier: CARRIERS.find(c => c.id === r.carrierId) || CARRIERS[0],
-        rate: r.baseRate,
         displayRate: r.displayRate,
         transitDays: r.transitDays,
         deliveryDate: r.deliveryDate || calcDelivery(r.transitDays, pickupDate),

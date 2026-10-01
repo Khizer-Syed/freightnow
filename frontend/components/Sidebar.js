@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth0 } from '@auth0/auth0-react';
+import useRole from '@/lib/useRole';
 import s from './Sidebar.module.css';
 
 const NAV_ITEMS = [
@@ -17,6 +18,12 @@ const NAV_ITEMS = [
   { href: '/', label: 'Back to website', icon: 'home' },
 ];
 
+// Shown only to IFF admins — the pages themselves are also admin-guarded server-side.
+const ADMIN_ITEMS = [
+  { section: 'IFF Admin' },
+  { href: '/portal/admin/pricing', label: 'Pricing', icon: 'chart' },
+];
+
 const ICONS = {
   search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
   dashboard: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
@@ -25,6 +32,7 @@ const ICONS = {
   file: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>,
   user: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   card: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+  chart: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   home: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
   logout: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
 };
@@ -32,6 +40,8 @@ const ICONS = {
 export default function Sidebar() {
   const pathname = usePathname();
   const { logout, user: auth0User } = useAuth0();
+  const { role } = useRole();
+  const navItems = role === 'iff_admin' ? [...NAV_ITEMS, ...ADMIN_ITEMS] : NAV_ITEMS;
 
   function handleSignOut() {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -60,7 +70,7 @@ export default function Sidebar() {
       </div>
 
       <nav className={s.nav}>
-        {NAV_ITEMS.map((item, i) => {
+        {navItems.map((item, i) => {
           if (item.section) {
             return <div key={i} className={s.section}>{item.section}</div>;
           }
