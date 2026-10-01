@@ -42,6 +42,17 @@ function priceRate(rate, inputs) {
   return priceQuote({ ...engineInput, cost: rate }, ruleSet);
 }
 
+// The engine treats cost as being in the quote's currency. Adapters whose carrier bills in a
+// different currency (XPO quotes USD) say so via `currency`; convert at the rule set's FX rate
+// so a USD cost is never priced as if it were CAD. Adapters that omit it are left untouched.
+function toQuoteCurrency(r, inputs) {
+  if (!r.currency || r.currency === inputs.currency) return r.rate;
+  const fx = inputs.ruleSet.usdToCadRate || 1.40;
+  if (r.currency === 'USD' && inputs.currency === 'CAD') return Math.round(r.rate * fx * 100) / 100;
+  if (r.currency === 'CAD' && inputs.currency === 'USD') return Math.round((r.rate / fx) * 100) / 100;
+  return r.rate;
+}
+
 async function getAllRates(params, userId) {
   const [carriers, ruleSet] = await Promise.all([getAllCarriers(), getActiveRuleSet()]);
   const inputs = buildPricingInputs(params, ruleSet);
@@ -67,8 +78,9 @@ async function getAllRates(params, userId) {
 
   // Price each rate through the engine and sort
   const processedRates = allRates.map((r) => {
-    const priced = priceRate(r.rate, inputs);
-    return { ...r, baseRate: r.rate, displayRate: priced.sell, pricingResult: priced };
+    const cost = toQuoteCurrency(r, inputs);
+    const priced = priceRate(cost, inputs);
+    return { ...r, baseRate: cost, displayRate: priced.sell, pricingResult: priced };
   });
   processedRates.sort((a, b) => a.displayRate - b.displayRate);
 
@@ -182,7 +194,7 @@ async function getSingleCarrierRate(carrierId, params) {
   try {
     const rates = await carrier.getRates(params);
     return rates.map((r) => {
-      const priced = priceRate(r.rate, inputs);
+      const priced = priceRate(toQuoteCurrency(r, inputs), inputs);
       return {
         rate: priced.sell,
         serviceName: r.serviceName,

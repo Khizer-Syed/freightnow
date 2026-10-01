@@ -20,7 +20,7 @@ module.exports = {
       secretKey: process.env.FEDEX_SECRET_KEY,
       accountNumber: process.env.FEDEX_ACCOUNT_NUMBER,
     },
-    xpo: { apiKey: process.env.XPO_API_KEY },
+    xpo: { authKey: process.env.XPO_AUTH_KEY, billAccount: process.env.XPO_BILL_ACCOUNT },
     dayross: {
       email: process.env.DAYROSS_EMAIL,
       password: process.env.DAYROSS_PASSWORD,
