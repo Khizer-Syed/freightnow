@@ -58,6 +58,9 @@ class FedExAdapter extends CarrierAdapter {
       },
       requestedShipment: {
         shipper: {
+          // Shipper + payor carry the same account: Comprehensive Rates rejects a SENDER-paid
+          // request with ACCOUNT.NUMBER.MISMATCH unless both match.
+          accountNumber: { value: accountNumber },
           address: {
             postalCode: origin.postalCode || '',
             countryCode: origin.country || 'CA',
@@ -70,6 +73,10 @@ class FedExAdapter extends CarrierAdapter {
             countryCode: destination.country || 'US',
             ...(destination.city && { city: destination.city }),
           },
+        },
+        shippingChargesPayment: {
+          paymentType: 'SENDER',
+          payor: { responsibleParty: { accountNumber: { value: accountNumber } } },
         },
         pickupType: 'USE_SCHEDULED_PICKUP',
         packagingType,
@@ -103,7 +110,9 @@ class FedExAdapter extends CarrierAdapter {
       };
     }
 
-    const url = `${getBaseUrl()}/rate/v1/rates/quotes`;
+    // FedEx requires Integrators to use Comprehensive Rates and Transit Times (confirmed with
+    // FedEx support) — the plain Rate API returns 403 for this project.
+    const url = `${getBaseUrl()}/rate/v1/comprehensiverates/quotes`;
     const rateHeaders = {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -174,10 +183,12 @@ class FedExAdapter extends CarrierAdapter {
       // Get the best available rate (prefer ACCOUNT, fall back to LIST)
       const ratedShipmentDetails = detail.ratedShipmentDetails || [];
       let bestRate = null;
+      let currency = null;
       for (const rsd of ratedShipmentDetails) {
         const total = rsd.totalNetCharge;
         if (total != null) {
           bestRate = typeof total === 'number' ? total : parseFloat(total);
+          currency = rsd.currency || null;
           break;
         }
       }
@@ -246,6 +257,8 @@ class FedExAdapter extends CarrierAdapter {
         serviceName,
         serviceCode: serviceType,
         rate: Math.round(bestRate * 100) / 100,
+        // FedEx can bill in USD even for Canadian origins; rate.service converts to the quote currency.
+        ...(currency && { currency }),
         transitDays: transitDays || 0,
         deliveryDate: deliveryDate || '',
         isLive: true,

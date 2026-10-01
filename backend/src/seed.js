@@ -28,7 +28,7 @@ async function main() {
   // Carriers and markup rules must exist before any rate/booking logic runs.
   const carrierDefs = [
     { carrierId: 'fedex', name: 'FedEx', shipmentTypes: ['envelope', 'parcel', 'ltl'], credentialsRef: 'env:FEDEX_API_KEY' },
-    { carrierId: 'xpo', name: 'XPO Logistics', shipmentTypes: ['ltl'], credentialsRef: 'env:XPO_API_KEY' },
+    { carrierId: 'xpo', name: 'XPO Logistics', shipmentTypes: ['ltl'], providesLiveRates: true, credentialsRef: 'env:XPO_AUTH_KEY' },
     { carrierId: 'dayross', name: 'Day & Ross', shipmentTypes: ['ltl', 'parcel', 'envelope'], credentialsRef: 'env:DAYROSS_EMAIL' },
     { carrierId: 'manitoulin', name: 'Manitoulin', shipmentTypes: ['ltl'], credentialsRef: 'env:MANITOULIN_API_KEY' },
     { carrierId: 'polaris', name: 'Polaris', shipmentTypes: ['ltl'], credentialsRef: 'env:POLARIS_API_KEY' },
